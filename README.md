@@ -1,4 +1,4 @@
-# Robin
+# Robin 🏹
 
 > Conectar a personas en situaciones especiales con donantes dispuestos a ayudar, mediante la donación directa de bienes materiales no monetarios.
 
@@ -12,4 +12,4 @@
 ## Enlaces
 
 -  Prototipo: [Ver prototipo](robin-github-io.vercel.app)
-- 📄 Documentos: [Ver documentación](ENLACE_A_DOCUMENTOS)
+- 📄 Documentos: [Ver documentación](..docs/arquitecturaDeDesarrollo_Robin.pdf)

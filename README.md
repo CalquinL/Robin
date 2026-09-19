@@ -11,5 +11,5 @@
 
 ## Enlaces
 
--  Prototipo: [Ver prototipo](robin-github-io.vercel.app)
+-  Prototipo: [Ver prototipo](https://robin-github-io.vercel.app/index.html)
 - 📄 Documento de propuesta: [Ver documento](./docs/arquitecturaDeDesarrollo_Robin.pdf)

@@ -12,4 +12,4 @@
 ## Enlaces
 
 -  Prototipo: [Ver prototipo](robin-github-io.vercel.app)
-- 📄 Documentos: [Ver documentación](..docs/arquitecturaDeDesarrollo_Robin.pdf)
+- 📄 Documentos: [Ver documentación](.docs/arquitecturaDeDesarrollo_Robin.pdf)

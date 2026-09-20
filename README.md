@@ -4,10 +4,9 @@
 
 ## Integrantes
 
-| Nombre | GitHub |
+| Autor | GitHub |
 |---|---|
 | Lucas Calquín| [@CalquinL](https://github.com/CalquinL) |
-| Nicolás Escobar | [@USUARIO_NICOLAS](https://github.com/USUARIO_NICOLAS) |
 
 ## Enlaces
 

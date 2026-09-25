@@ -2,7 +2,7 @@
 
 > Conectar a personas en situaciones especiales con donantes dispuestos a ayudar, mediante la donación directa de bienes materiales no monetarios.
 
-## Integrantes
+## Propiedad
 
 | Autor | GitHub |
 |---|---|

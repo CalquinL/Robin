@@ -12,3 +12,4 @@
 
 -  Prototipo: [Ver prototipo](https://robin-github-io.vercel.app/index.html)
 - 📄 Documento de propuesta: [Ver documento](./docs/arquitecturaDeDesarrollo_Robin.pdf)
+-  Mapa del producto: [Ver imagen](./docs/mapaProductoRobin.jpeg)

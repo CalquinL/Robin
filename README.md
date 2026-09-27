@@ -10,7 +10,7 @@
 
 ## Enlaces
 
-- 📄 Documento de propuesta: [Ver documento](./docs/arquitecturaDeDesarrollo_Robin.pdf)
+- 📄 Documento de propuesta: [Ver documento](./docs/Proyecto_arquitecturaDeDesarrollo - Documentos de Google.pdf)
 -  Laminas presentación H1: [Ver presentación en PDF](./docs/Robin.pdf)
 -  Laminas presentación H1: [Descargar PowerPoint](./docs/Robin.pptx)
 -  Prototipo navegable: [Ver prototipo](https://robin-github-io.vercel.app/index.html)

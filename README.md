@@ -10,7 +10,7 @@
 
 ## Enlaces
 
-- 📄 Documento de propuesta: [Ver documento](./docs/documentoPropuestaRobin (1).pdf)
+- 📄 Documento de propuesta: [Ver documento](./docs/documentoPropuestaRobin(1).pdf)
 -  Laminas presentación H1: [Ver presentación en PDF](./docs/Robin_actualizado.pdf)
 -  Laminas presentación H1: [Descargar PowerPoint](./docs/Robin_actualizado.pptx)
 -  Prototipo navegable: [Ver prototipo](https://robin-github-io.vercel.app/index.html)

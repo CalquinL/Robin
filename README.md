@@ -4,9 +4,10 @@
 
 ## Propiedad
 
-| Autor | GitHub |
+| Autores | GitHub |
 |---|---|
-| Lucas Calquín| [@CalquinL](https://github.com/CalquinL) |
+| Lucas Calquín| [@CalquinL](https://github.com/CalquinL) | 
+| Nicolás Escobar| [@Nicolas-4212](https://github.com/Nicolas-4212) | 
 
 ## Enlaces
 

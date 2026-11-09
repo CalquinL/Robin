@@ -1,0 +1,24 @@
+# Dev
+node_modules/
+CLAUDE.md
+
+# Variables de entorno
+.env
+
+# Logs
+log/
+*.log
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Uploads
+uploads/*
+
+# Scripts
+run-project.bat

@@ -1,0 +1,64 @@
+import Publication, { IPublication } from "../models/publication";
+
+class PublicationRepository {
+    async create(publicationData: Partial<IPublication>): Promise<IPublication> {
+        const publication = new Publication(publicationData);
+        return await publication.save();
+    }
+
+    async findById(id: string): Promise<IPublication | null> {
+        return await Publication.findById(id).select("-__v");
+    }
+
+    async findByUserId(userId: string, options: any): Promise<{ docs: IPublication[], totalDocs: number, totalPages: number, page: number, limit: number }> {
+        return await (Publication as any).paginate({ user_id: userId }, options);
+    }
+
+    async findApproved(options: any): Promise<{ docs: IPublication[], totalDocs: number, totalPages: number, page: number, limit: number }> {
+        return await (Publication as any).paginate({ status: "aprobada" }, options);
+    }
+
+    async update(id: string, updateData: Partial<IPublication>): Promise<IPublication | null> {
+        return await Publication.findByIdAndUpdate(id, updateData, { new: true }).select("-__v");
+    }
+
+    async delete(id: string, userId: string): Promise<IPublication | null> {
+        return await (Publication as any).findOneAndDelete({ _id: id, user_id: userId });
+    }
+
+    async updateStatus(id: string, status: string): Promise<IPublication | null> {
+        return await Publication.findByIdAndUpdate(id, { status }, { new: true }).select("-__v");
+    }
+
+    async updateImage(id: string, userId: string, filename: string): Promise<IPublication | null> {
+        return await (Publication as any).findOneAndUpdate(
+            { _id: id, user_id: userId },
+            { file: filename },
+            { new: true }
+        ).select("-__v");
+    }
+
+    async atomicReserveItem(publicationId: string, itemId: string): Promise<IPublication | null> {
+        return await Publication.findOneAndUpdate(
+            {
+                _id: publicationId,
+                status: "aprobada",
+                necesidades: { $elemMatch: { _id: itemId, status: "disponible" } }
+            },
+            {
+                $set: { "necesidades.$.status": "reservado" }
+            },
+            { new: true }
+        ).select("-__v");
+    }
+
+    async updateItemStatus(publicationId: string, itemId: string, status: string): Promise<IPublication | null> {
+        return await Publication.findOneAndUpdate(
+            { _id: publicationId, "necesidades._id": itemId },
+            { $set: { "necesidades.$.status": status } },
+            { new: true }
+        ).select("-__v");
+    }
+}
+
+export default new PublicationRepository();

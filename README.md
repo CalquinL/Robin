@@ -1,4 +1,4 @@
-# Robin 🏹 (reescribir README una vez subidos todos los archivos, mostrar instalación, enlaces, etc.)
+# Robin 🏹 (reescribir README una vez subidos todos los archivos, mostrar instalación, enlaces, , mencionar la carpeta uploads vacia para dejar archivos, etc.)
 
 > Conectar a personas en situaciones especiales con donantes dispuestos a ayudar, mediante la donación directa de bienes materiales no monetarios.
 

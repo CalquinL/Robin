@@ -2,13 +2,10 @@ import ReservationRepository from "../repositories/reservation.repository";
 import PublicationRepository from "../repositories/publication.repository";
 import NotificationService from "./notification.service";
 import AppError from "../utils/AppError";
-import { IPublication, IReservation } from "../models/reservation";
-import { ReservationStatus } from "../types/domain";
 
 class ReservationService {
     async createReservation(donorId: string, publicationId: string, itemId: string): Promise<any> {
         const publication = await PublicationRepository.atomicReserveItem(publicationId, itemId);
-        // ... resto del código igual
 
         if (!publication) {
             throw new AppError("NEED_NOT_AVAILABLE", 409, "La necesidad fue reservada");
@@ -16,17 +13,19 @@ class ReservationService {
 
         try {
             const reservation = await ReservationRepository.create({
-                publication_id: publicationId,
-                item_id: itemId,
-                donor_id: donorId,
+                publication_id: publicationId as any,
+                item_id: itemId as any,
+                donor_id: donorId as any,
                 status: "reservado"
             });
 
-            const beneficiaryId = publication.user_id;
+            const beneficiaryId = publication.user_id.toString();
+            const item = publication.necesidades.find((n: any) => n._id.toString() === itemId);
+
             await NotificationService.createNotification(
                 beneficiaryId,
                 "confirmación",
-                `Un donante ha reservado el ítem: ${publication.necesidades.find((n: any) => n._id.toString() === itemId).name}`
+                `Un donante ha reservado el ítem: ${item?.name || "no especificado"}`
             );
 
             return reservation;
@@ -132,7 +131,7 @@ class ReservationService {
             return reservation;
         }
 
-        const publication = await PublicationRepository.findById(reservation.publication_id);
+        const publication = await PublicationRepository.findById(reservation.publication_id.toString());
         if (!publication) throw new AppError("NOT_FOUND", 404, "La publicación asociada no existe");
 
         const isParticipant = (reservation.donor_id.toString() === userId ||

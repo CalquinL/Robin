@@ -11,7 +11,7 @@ class ReservationRepository {
     }
 
     async findByDonor(donorId: string, options: any): Promise<{ docs: IReservation[], totalDocs: number, totalPages: number, page: number, limit: number }> {
-        return await Reservation.paginate({ donor_id: donorId }, options);
+        return await (Reservation as any).paginate({ donor_id: donorId }, options);
     }
 
     async update(id: string, updateData: Partial<IReservation>): Promise<IReservation | null> {

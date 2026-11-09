@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robin</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo-link">
+            <img src="assets/robinApp_Logo.png" alt="Logo Robin">
+        </a>
+        <div class="role-switcher">
+            <span>Rol:</span>
+            <select id="role-select">
+                <option value="donor">Donante</option>
+                <option value="beneficiary">Beneficiario</option>
+                <option value="admin">Administrador</option>
+            </select>
+        </div>
+    </header>
+
+    <nav class="navbar">
+        <div class="nav-left">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" placeholder="Buscar historias, necesidades, beneficiarios...">
+        </div>
+
+        <div class="nav-right">
+            <a href="index.html" class="nav-btn active" data-page="feed">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
+                    <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+                    <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+                </svg>
+                Feed
+            </a>
+            <a href="donations.html" class="nav-btn" data-page="donations">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572" />
+                </svg>
+                Donaciones
+            </a>
+            <a href="notifications.html" class="nav-btn" data-page="notifications" id="nav-notifications">
+                <div class="nav-btn-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" />
+                        <path d="M9 17v1a3 3 0 0 0 6 0v-1" />
+                    </svg>
+                    Notificaciones
+                    <span id="notification-count" class="notification-badge">0</span>
+                </div>
+            </a>
+            <a href="profile.html" class="nav-btn" data-page="profile">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <circle cx="12" cy="7" r="4" />
+                    <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                </svg>
+                Perfil
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <aside class="left-aside">
+            <div class="card-box user-profile-card">
+                <div class="user-info-header">
+                    <div class="avatar-circle">U</div>
+                    <h4>Usuario Actual</h4>
+                </div>
+                <div class="user-profile-actions">
+                    <a href="profile.html" class="btn-action btn-secondary">Editar Perfil</a>
+                    <a href="#" class="btn-action btn-secondary btn-saved">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                        Guardados
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <section id="page-feed" class="page-section active">
+                <div class="create-post role-beneficiary">
+                    <div class="avatar-circle">U</div>
+                    <input type="text" placeholder="¿Qué necesidad quieres compartir hoy?">
+                </div>
+
+                <div class="story-card" data-post-id="1">
+                    <div class="story-header">
+                        <div class="story-user">
+                            <div class="avatar-circle">M</div>
+                            <div class="story-info">
+                                <h4>María Fernández <span class="badge-verified">✓ Historia verificada</span></h4>
+                                <span>Beneficiaria · Hace 2 horas</span>
+                            </div>
+                        </div>
+                        <div class="story-actions">
+                            <button class="btn-action btn-primary">Ver Necesidades</button>
+                        </div>
+                    </div>
+                    <div class="story-content">
+                        <p>¡Hola! Estamos juntando pañales y ropa para la llegada de mi bebé Martina. Cualquier ayuda es bienvenida. ¡Gracias!</p>
+                        <div class="story-image">🖼️ Imagen de la publicación</div>
+                    </div>
+                </div>
+
+                <div class="story-card" data-post-id="2">
+                    <div class="story-header">
+                        <div class="story-user">
+                            <div class="avatar-circle">E</div>
+                            <div class="story-info">
+                                <h4>Centro de Salud San José <span class="badge-verified">✓ Historia verificada</span></h4>
+                                <span>Organización · Hace 5 horas</span>
+                            </div>
+                        </div>
+                        <div class="story-actions">
+                            <button class="btn-action btn-primary">Ver Necesidades</button>
+                        </div>
+                    </div>
+                    <div class="story-content">
+                        <p>Don Ernesto necesita un termómetro digital y medicamentos para su tratamiento. ¡Ayúdanos a completar su lista!</p>
+                        <div class="story-image">🖼️ Imagen de la publicación</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <aside class="right-aside">
+            <div id="right-aside-feed">
+                <button class="create-post-btn">+ Crear Nueva Publicación</button>
+
+                <div class="card-box">
+                    <h3>Alertas Relevantes</h3>
+                    <div class="alert-item">🚨 Inundaciones en el norte. Se necesitan mantas.</div>
+                    <div class="alert-item">🔥 Incendio forestal. Urge agua y alimentos no perecederos.</div>
+                    <div class="alert-item">🏠 Refugio temporal necesita ropa de invierno.</div>
+                </div>
+
+                <div class="card-box">
+                    <h3>Estadísticas Globales</h3>
+                    <p style="font-size: 14px; color: #555;">Este mes se han donado <strong style="color: var(--naranja-principal);">1,245 ítems</strong> gracias a la comunidad.</p>
+                </div>
+
+                <div class="card-box ngo-section">
+                    <h3>ONG´s aliadas</h3>
+                    <div class="ngo-list">
+                        <a href="#" class="ngo-link" title="TECHO">
+                            <img src="assets/techoLogo.png" alt="TECHO" class="ngo-img">
+                        </a>
+                        <a href="#" class="ngo-link" title="UNICEF">
+                            <img src="assets/unicefLogo.jpg" alt="UNICEF" class="ngo-img">
+                        </a>
+                        <a href="#" class="ngo-link" title="WWF">
+                            <img src="assets/wwf-panda-logo.jpg" alt="WWF" class="ngo-img">
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

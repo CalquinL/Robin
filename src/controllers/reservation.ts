@@ -56,7 +56,7 @@ class ReservationController {
 
     async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const reservation = await reservationService.getReservationById(req.params.id, req.user!.id, req.user!.role);
+            const reservation = await reservationService.getReservationById(req.params.id as string, req.user!.id, req.user!.role);
             sendSuccess(res, reservation, 200);
         } catch (error) {
             next(error);
@@ -70,9 +70,9 @@ class ReservationController {
 
             let result;
             if (status === "cancelada") {
-                result = await reservationService.cancelReservation(req.params.id, userId);
+                result = await reservationService.cancelReservation(req.params.id as string, userId);
             } else if (status === "entregado") {
-                result = await reservationService.confirmDelivery(req.params.id, userId);
+                result = await reservationService.confirmDelivery(req.params.id as string, userId);
             } else {
                 throw new AppError("BAD_REQUEST", 400, "Estado de reserva no válido");
             }

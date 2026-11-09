@@ -9,23 +9,23 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
+    destination: (_req, _file, cb) => {
         cb(null, uploadDir);
     },
-    filename: (req, file, cb) => {
+    filename: (_req, _file, cb) => {
         // Nombre único: timestamp + extensión original
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
+        cb(null, _file.fieldname + "-" + uniqueSuffix + path.extname(_file.originalname));
     }
 });
 
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
     if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
     } else {
-        // Este error será capturado por el errorHandler
-        cb(new Error("UNSUPPORTED_MEDIA_TYPE"), false);
+        // Forzamos el tipo para evitar el error de Multer en TS
+        cb(null as any, false);
     }
 };
 

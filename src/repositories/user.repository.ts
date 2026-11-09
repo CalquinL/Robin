@@ -43,7 +43,7 @@ class UserRepository {
         const savedUser = await user.save();
 
         // Convertimos a objeto plano y eliminamos el password antes de devolverlo
-        const userObj = savedUser.toObject();
+        const userObj = savedUser.toObject() as any;
         delete userObj.password;
 
         return userObj;

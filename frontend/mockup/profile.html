@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robin - Perfil</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo-link">
+            <img src="assets/robinApp_Logo.png" alt="Logo Robin">
+        </a>
+        <div class="role-switcher">
+            <span>Rol:</span>
+            <select id="role-select">
+                <option value="donor">Donante</option>
+                <option value="beneficiary">Beneficiario</option>
+                <option value="admin">Administrador</option>
+            </select>
+        </div>
+    </header>
+
+    <nav class="navbar">
+        <div class="nav-left">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" placeholder="Buscar historias, necesidades, beneficiarios...">
+        </div>
+
+        <div class="nav-right">
+            <a href="index.html" class="nav-btn" data-page="feed">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
+                    <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+                    <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+                </svg>
+                Feed
+            </a>
+            <a href="donations.html" class="nav-btn" data-page="donations">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572" />
+                </svg>
+                Donaciones
+            </a>
+            <a href="notifications.html" class="nav-btn" data-page="notifications" id="nav-notifications">
+                <div class="nav-btn-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" />
+                        <path d="M9 17v1a3 3 0 0 0 6 0v-1" />
+                    </svg>
+                    Notificaciones
+                    <span id="notification-count" class="notification-badge">0</span>
+                </div>
+            </a>
+            <a href="profile.html" class="nav-btn active" data-page="profile">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <circle cx="12" cy="7" r="4" />
+                    <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                </svg>
+                Perfil
+            </a>
+        </div>
+    </nav>
+
+    <div class="container profile-container">
+        <aside class="left-aside">
+            <div class="card-box">
+                <div class="profile-aside-header">
+                    <div class="profile-avatar-container">
+                        <div class="avatar-circle" id="profile-avatar" style="width: 100px; height: 100px; font-size: 32px;">U</div>
+                        <button id="btn-change-photo" class="btn-edit-photo" title="Cambiar foto">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                        </button>
+                    </div>
+                    <h2 id="profile-name" style="text-align: center; margin: 10px 0 5px;">Usuario de Robin</h2>
+                    <p id="profile-role" style="text-align: center; color: var(--gris-texto); margin-bottom: 15px;">Rol: Donante</p>
+                    <button id="btn-edit-profile" class="btn-action btn-secondary" style="width: 100%;">Editar Perfil</button>
+                </div>
+            </div>
+
+            <div class="card-box">
+                <h3 class="card-title">Logros</h3>
+                <div class="achievements-list">
+                    <div class="achievement-item">
+                        <img src="assets/medallaBronce.png" alt="Medalla Bronce" class="achievement-icon">
+                        <span class="achievement-label">Medalla 1</span>
+                    </div>
+                    <div class="achievement-item">
+                        <img src="assets/medallaBronce.png" alt="Medalla Bronce" class="achievement-icon">
+                        <span class="achievement-label">Medalla 2</span>
+                    </div>
+                    <div class="achievement-item">
+                        <img src="assets/medallaBronce.png" alt="Medalla Bronce" class="achievement-icon">
+                        <span class="achievement-label">Medalla 3</span>
+                    </div>
+                    <div class="achievement-item">
+                        <img src="assets/medallaBronce.png" alt="Medalla Bronce" class="achievement-icon">
+                        <span class="achievement-label">Medalla 4</span>
+                    </div>
+                    <div class="achievement-item">
+                        <img src="assets/medallaBronce.png" alt="Medalla Bronce" class="achievement-icon">
+                        <span class="achievement-label">Medalla 5</span>
+                    </div>
+                    <div class="achievement-item">
+                        <img src="assets/medallaBronce.png" alt="Medalla Bronce" class="achievement-icon">
+                        <span class="achievement-label">Medalla 6</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-box settings-card">
+                <h3 class="card-title">Configuración</h3>
+                <ul class="settings-list">
+                    <li>
+                        <a href="#" class="settings-item">
+                            <span class="settings-text">Cambiar Contraseña</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 12v-3m0 0l3 3m-3-3l-3 3"/></svg>
+                        </a>
+                    </li>
+                    <li class="settings-divider"></li>
+                    <li>
+                        <a href="#" class="settings-item logout">
+                            <span class="settings-text">Cerrar Sesión</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <section id="page-profile" class="page-section active">
+                <div class="card-box activity-card">
+                    <h3 class="card-title">Actividad Reciente</h3>
+                    <div id="profile-activity-list" class="activity-list">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <div id="beneficiary-extra" class="card-box beneficiary-card" style="display: none; margin-top: 20px;">
+                    <h3 class="card-title">Publicaciones Activas</h3>
+                    <div id="beneficiary-posts-container" class="beneficiary-posts-list">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

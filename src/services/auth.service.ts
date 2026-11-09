@@ -50,7 +50,10 @@ class AuthService {
             throw new AppError("INVALID_CREDENTIALS", 401, "Credenciales incorrectas");
         }
 
-        const token = jwtService.createToken(user);
+        const token = jwtService.createToken({
+            _id: user._id.toString(),
+            role: user.role
+        });
 
         return {
             user: {

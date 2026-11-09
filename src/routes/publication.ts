@@ -8,20 +8,20 @@ const router = Router();
 
 // Configuración de Multer para Imágenes de Publicaciones
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
+    destination: (_req, _file, cb) => {
         cb(null, "./uploads/publications/");
     },
-    filename: (req, file, cb) => {
+    filename: (_req, file, cb) => {
         cb(null, `pub-${Date.now()}-${file.originalname}`);
     }
 });
 
 const upload = multer({
     storage,
-    fileFilter: (req, file, cb) => {
+    fileFilter: (_req, file, cb) => {
         const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
         if (!allowedTypes.includes(file.mimetype)) {
-            return cb(new Error("UNSUPPORTED_MEDIA_TYPE"), false);
+            return cb(new Error("UNSUPPORTED_MEDIA_TYPE") as any, false);
         }
         cb(null, true);
     },

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robin - Donaciones</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo-link">
+            <img src="assets/robinApp_Logo.png" alt="Logo Robin">
+        </a>
+        <div class="role-switcher">
+            <span>Rol:</span>
+            <select id="role-select">
+                <option value="donor">Donante</option>
+                <option value="beneficiary">Beneficiario</option>
+                <option value="admin">Administrador</option>
+            </select>
+        </div>
+    </header>
+
+    <nav class="navbar">
+        <div class="nav-left">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" placeholder="Buscar historias, necesidades, beneficiarios...">
+        </div>
+
+        <div class="nav-right">
+            <a href="index.html" class="nav-btn" data-page="feed">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
+                    <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+                    <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+                </svg>
+                Feed
+            </a>
+            <a href="donations.html" class="nav-btn active" data-page="donations">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572" />
+                </svg>
+                Donaciones
+            </a>
+            <a href="notifications.html" class="nav-btn" data-page="notifications" id="nav-notifications">
+                <div class="nav-btn-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" />
+                        <path d="M9 17v1a3 3 0 0 0 6 0v-1" />
+                    </svg>
+                    Notificaciones
+                    <span id="notification-count" class="notification-badge">0</span>
+                </div>
+            </a>
+            <a href="profile.html" class="nav-btn" data-page="profile">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <circle cx="12" cy="7" r="4" />
+                    <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                </svg>
+                Perfil
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <main class="main-content">
+            <section id="page-donations" class="page-section active">
+                <h2 class="page-title">Mis Donaciones</h2>
+                <div class="role-view view-donor">
+                    <div class="donations-header">
+                        <div class="donations-tabs">
+                            <button class="tab-btn active" data-tab="pending">Pendientes</button>
+                            <button class="tab-btn" data-tab="delivered">Entregados</button>
+                            <button class="tab-btn" data-tab="all">Todos</button>
+                        </div>
+                    </div>
+
+                    <div id="donations-container" class="donations-grouped-container">
+                        <div class="beneficiary-group">
+                            <div class="group-header">
+                                <div class="avatar-circle">M</div>
+                                <h4>María Fernández</h4>
+                            </div>
+                            <div class="group-items">
+                                <div class="donation-item" data-status="delivered">
+                                    <div class="donation-item-info">
+                                        <span class="item-name">Pañales talla M</span>
+                                        <div class="beneficiary-mini-info">
+                                            <span class="date-info">Entregado hace 2 días</span>
+                                        </div>
+                                    </div>
+                                    <span class="badge badge-green">Entregado</span>
+                                </div>
+                                <div class="donation-item" data-status="delivered">
+                                    <div class="donation-item-info">
+                                        <span class="item-name">Biberones x2</span>
+                                        <div class="beneficiary-mini-info">
+                                            <span class="date-info">Entregado hace 1 día</span>
+                                        </div>
+                                    </div>
+                                    <span class="badge badge-green">Entregado</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="beneficiary-group">
+                            <div class="group-header">
+                                <div class="avatar-circle">J</div>
+                                <h4>Juan Pérez</h4>
+                            </div>
+                            <div class="group-items">
+                                <div class="donation-item" data-status="pending">
+                                    <div class="donation-item-info">
+                                        <span class="item-name">Mantas térmicas</span>
+                                        <div class="beneficiary-mini-info">
+                                            <span class="date-info">Reservado hace 3 días</span>
+                                        </div>
+                                    </div>
+                                    <div class="donation-actions">
+                                        <span class="badge badge-orange">Reservado</span>
+                                        <div class="action-buttons">
+                                            <button class="btn-confirm">Confirmar Entrega</button>
+                                            <button class="btn-cancel">Cancelar reserva</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="donation-item" data-status="pending">
+                                    <div class="donation-item-info">
+                                        <span class="item-name">Leche en polvo</span>
+                                        <div class="beneficiary-mini-info">
+                                            <span class="date-info">Reservado hace 2 días</span>
+                                        </div>
+                                    </div>
+                                    <div class="donation-actions">
+                                        <span class="badge badge-orange">Reservado</span>
+                                        <div class="action-buttons">
+                                            <button class="btn-confirm">Confirmar Entrega</button>
+                                            <button class="btn-cancel">Cancelar reserva</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="beneficiary-group">
+                            <div class="group-header">
+                                <div class="avatar-circle">E</div>
+                                <h4>Centro San José</h4>
+                            </div>
+                            <div class="group-items">
+                                <div class="donation-item" data-status="pending">
+                                    <div class="donation-item-info">
+                                        <span class="item-name">Ropa de invierno</span>
+                                        <div class="beneficiary-mini-info">
+                                            <span class="date-info">Reservado hace 5 días</span>
+                                        </div>
+                                    </div>
+                                    <div class="donation-actions">
+                                        <span class="badge badge-orange">Reservado</span>
+                                        <div class="action-buttons">
+                                            <button class="btn-confirm">Confirmar Entrega</button>
+                                            <button class="btn-cancel">Cancelar reserva</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="donation-item" data-status="pending">
+                                    <div class="donation-item-info">
+                                        <span class="item-name">Toallitas húmedas</span>
+                                        <div class="beneficiary-mini-info">
+                                            <span class="date-info">Reservado hace 1 día</span>
+                                        </div>
+                                    </div>
+                                    <div class="donation-actions">
+                                        <span class="badge badge-orange">Reservado</span>
+                                        <div class="action-buttons">
+                                            <button class="btn-confirm">Confirmar Entrega</button>
+                                            <button class="btn-cancel">Cancelar reserva</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="role-view view-beneficiary">
+                    <h3 class="view-subtitle">Estado de mis Necesidades</h3>
+                    <div class="donations-list">
+                        <div class="donation-item">
+                            <div class="donation-item-info">
+                                <span class="item-name">Pañales talla M</span>
+                                <div class="beneficiary-mini-info">
+                                    <div class="avatar-circle">U</div>
+                                    <span class="beneficiary-name">Usuario actual</span>
+                                </div>
+                            </div>
+                            <span class="badge badge-orange">Reservado</span>
+                        </div>
+                        <div class="donation-item">
+                            <div class="donation-item-info">
+                                <span class="item-name">Ropa 0-3 meses</span>
+                                <div class="beneficiary-mini-info">
+                                    <div class="avatar-circle">U</div>
+                                    <span class="beneficiary-name">Usuario actual</span>
+                                </div>
+                            </div>
+                            <span class="badge badge-green">Entregado</span>
+                        </div>
+                        <div class="donation-item">
+                            <div class="donation-item-info">
+                                <span class="item-name">Biberones x2</span>
+                                <div class="beneficiary-mini-info">
+                                    <div class="avatar-circle">U</div>
+                                    <span class="beneficiary-name">Usuario actual</span>
+                                </div>
+                            </div>
+                            <span class="badge badge-green">Entregado</span>
+                        </div>
+                        <div class="donation-item">
+                            <div class="donation-item-info">
+                                <span class="item-name">Mantas térmicas</span>
+                                <div class="beneficiary-mini-info">
+                                    <div class="avatar-circle">U</div>
+                                    <span class="beneficiary-name">Usuario actual</span>
+                                </div>
+                            </div>
+                            <span class="badge badge-orange">Reservado</span>
+                        </div>
+                        <div class="donation-item">
+                            <div class="donation-item-info">
+                                <span class="item-name">Leche en polvo</span>
+                                <div class="beneficiary-mini-info">
+                                    <div class="avatar-circle">U</div>
+                                    <span class="beneficiary-name">Usuario actual</span>
+                                </div>
+                            </div>
+                            <span class="badge badge-green">Entregado</span>
+                        </div>
+                        <div class="donation-item">
+                            <div class="donation-item-info">
+                                <span class="item-name">Ropa de invierno</span>
+                                <div class="beneficiary-mini-info">
+                                    <div class="avatar-circle">U</div>
+                                    <span class="beneficiary-name">Usuario actual</span>
+                                </div>
+                            </div>
+                            <span class="badge badge-orange">Reservado</span>
+                        </div>
+                        <div class="donation-item">
+                            <div class="donation-item-info">
+                                <span class="item-name">Toallitas húmedas</span>
+                                <div class="beneficiary-mini-info">
+                                    <div class="avatar-circle">U</div>
+                                    <span class="beneficiary-name">Usuario actual</span>
+                                </div>
+                            </div>
+                            <span class="badge badge-green">Entregado</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="role-view view-admin">
+                    <h3 class="view-subtitle">Moderación de Historias</h3>
+                    <div class="donations-list">
+                        <div class="donation-item">
+                            <span>Solicitud de Juan Pérez</span>
+                            <div class="admin-actions">
+                                <button class="btn-verify">Verificar</button>
+                                <button class="btn-reject">Rechazar</button>
+                            </div>
+                        </div>
+                        <div class="donation-item">
+                            <span>Solicitud de María G.</span>
+                            <div class="admin-actions">
+                                <button class="btn-verify">Verificar</button>
+                                <button class="btn-reject">Rechazar</button>
+                            </div>
+                        </div>
+                        <div class="donation-item">
+                            <span>Solicitud de Centro Esperanza</span>
+                            <div class="admin-actions">
+                                <button class="btn-verify">Verificar</button>
+                                <button class="btn-reject">Rechazar</button>
+                            </div>
+                        </div>
+                        <div class="donation-item">
+                            <span>Solicitud de Roberto L.</span>
+                            <div class="admin-actions">
+                                <button class="btn-verify">Verificar</button>
+                                <button class="btn-reject">Rechazar</button>
+                            </div>
+                        </div>
+                        <div class="donation-item">
+                            <span>Solicitud de Ana M.</span>
+                            <div class="admin-actions">
+                                <button class="btn-verify">Verificar</button>
+                                <button class="btn-reject">Rechazar</button>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="donation-item">
+                            <span>Solicitud de Fundación Vida</span>
+                            <div class="admin-actions">
+                                <button class="btn-verify">Verificar</button>
+                                <button class="btn-reject">Rechazar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        <aside class="right-aside">
+            <div id="right-aside-donations">
+                <div class="card-box impact-section">
+                    <h3 style="text-align: center; margin-bottom: 20px;">Tu impacto</h3>
+                    <div class="impact-metric">
+                        <span class="impact-value">12</span>
+                        <p>personas ayudadas los últimos 3 meses</p>
+                    </div>
+                    <div class="impact-metric">
+                        <span class="impact-value">45</span>
+                        <p>donaciones realizadas</p>
+                    </div>
+
+                    <div class="impact-milestone">
+                        <div class="milestone-badge">
+                            <img src="assets/medallaBronce.png" alt="Medalla de Bronce" class="milestone-img">
+                        </div>
+                        <p class="milestone-text">Siguiente hito: <strong>Donante Bronce</strong></p>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 60%;">60%</div>
+                            </div>
+                        </div>
+                        <span class="milestone-hint">Te faltan 5 donaciones</span>
+                    </div>
+
+                    <a href="#" class="btn-history" style="display: block; text-align: center; margin-top: 20px; color: var(--naranja-principal); text-decoration: none; font-weight: bold; font-size: 14px;">Ver historial completo</a>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

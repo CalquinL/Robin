@@ -48,8 +48,12 @@ class UserController {
 
     async profile(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const userId = req.user?.id || req.params.id;
+            const userId = req.user?.id || (req.params.id as string);
             const user = await userService.getUserById(userId);
+
+            if (!user) {
+                throw new AppError("NOT_FOUND", 404, "Usuario no encontrado");
+            }
 
             const filteredUser = {
                 _id: user._id,
@@ -97,8 +101,12 @@ class UserController {
 
     async update(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const userId = req.user?.id || req.params.id;
+            const userId = req.user?.id || (req.params.id as string);
             const updatedUser = await userService.updateProfile(userId, req.body);
+
+            if (!updatedUser) {
+                throw new AppError("NOT_FOUND", 404, "Usuario no encontrado");
+            }
 
             const filteredUser = {
                 _id: updatedUser._id,
@@ -147,7 +155,7 @@ class UserController {
 
     async avatar(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const fileName = req.params.file;
+            const fileName = req.params.file as string;
             const filePath = path.join(process.cwd(), "uploads", "users", fileName);
 
             console.log("Buscando archivo de avatar en:", filePath);

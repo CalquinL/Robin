@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robin - Notificaciones</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo-link">
+            <img src="assets/robinApp_Logo.png" alt="Logo Robin">
+        </a>
+        <div class="role-switcher">
+            <span>Rol:</span>
+            <select id="role-select">
+                <option value="donor">Donante</option>
+                <option value="beneficiary">Beneficiario</option>
+                <option value="admin">Administrador</option>
+            </select>
+        </div>
+    </header>
+
+    <nav class="navbar">
+        <div class="nav-left">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" placeholder="Buscar historias, necesidades, beneficiarios...">
+        </div>
+
+        <div class="nav-right">
+            <a href="index.html" class="nav-btn" data-page="feed">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
+                    <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+                    <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+                </svg>
+                Feed
+            </a>
+            <a href="donations.html" class="nav-btn" data-page="donations">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572" />
+                </svg>
+                Donaciones
+            </a>
+            <a href="notifications.html" class="nav-btn active" data-page="notifications" id="nav-notifications">
+                <div class="nav-btn-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" />
+                        <path d="M9 17v1a3 3 0 0 0 6 0v-1" />
+                    </svg>
+                    Notificaciones
+                    <span id="notification-count" class="notification-badge">0</span>
+                </div>
+            </a>
+            <a href="profile.html" class="nav-btn" data-page="profile">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <circle cx="12" cy="7" r="4" />
+                    <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                </svg>
+                Perfil
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <main class="main-content">
+            <section id="page-notifications" class="page-section active">
+                <h2 class="page-title">Notificaciones</h2>
+
+                <div class="notifications-header">
+                    <div class="notification-filters">
+                        <button class="filter-tab active" data-filter="all">Todas</button>
+                        <button class="filter-tab" data-filter="reservations">Reservas</button>
+                        <button class="filter-tab" data-filter="stories">Historias</button>
+                    </div>
+                    <button id="mark-all-read" class="btn-mark-read">Marcar todas como leídas</button>
+                </div>
+
+                <div id="notifications-container" class="notifications-list">
+                    <!-- Notifications will be rendered here by JS -->
+                </div>
+
+                <div id="notifications-empty" class="notifications-empty" style="display: none;">
+                    <div class="empty-state-content">
+                        <span class="empty-state-icon">🔔</span>
+                        <p>No tienes notificaciones por ahora</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

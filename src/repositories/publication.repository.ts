@@ -1,5 +1,4 @@
 import Publication, { IPublication } from "../models/publication";
-import { Meta } from "../utils/response";
 
 class PublicationRepository {
     async create(publicationData: Partial<IPublication>): Promise<IPublication> {
@@ -12,11 +11,11 @@ class PublicationRepository {
     }
 
     async findByUserId(userId: string, options: any): Promise<{ docs: IPublication[], totalDocs: number, totalPages: number, page: number, limit: number }> {
-        return await Publication.paginate({ user_id: userId }, options);
+        return await (Publication as any).paginate({ user_id: userId }, options);
     }
 
     async findApproved(options: any): Promise<{ docs: IPublication[], totalDocs: number, totalPages: number, page: number, limit: number }> {
-        return await Publication.paginate({ status: "aprobada" }, options);
+        return await (Publication as any).paginate({ status: "aprobada" }, options);
     }
 
     async update(id: string, updateData: Partial<IPublication>): Promise<IPublication | null> {
@@ -24,7 +23,7 @@ class PublicationRepository {
     }
 
     async delete(id: string, userId: string): Promise<IPublication | null> {
-        return await Publication.findOneAndDelete({ _id: id, user_id: userId });
+        return await (Publication as any).findOneAndDelete({ _id: id, user_id: userId });
     }
 
     async updateStatus(id: string, status: string): Promise<IPublication | null> {
@@ -32,7 +31,7 @@ class PublicationRepository {
     }
 
     async updateImage(id: string, userId: string, filename: string): Promise<IPublication | null> {
-        return await Publication.findOneAndUpdate(
+        return await (Publication as any).findOneAndUpdate(
             { _id: id, user_id: userId },
             { file: filename },
             { new: true }

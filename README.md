@@ -9,7 +9,7 @@
 | Lucas Calquín| [@CalquinL](https://github.com/CalquinL) | 
 | Nicolás Escobar| [@Nicolas-4212](https://github.com/Nicolas-4212) | 
 
-## Enlaces
+## Enlaces Hito 1
 
 - 📄 Documento de propuesta: [Ver documento](./docs/documentoPropuestaRobin1.pdf)
 -  Laminas presentación H1: [Ver presentación en PDF](./docs/Robin_slides.pdf)

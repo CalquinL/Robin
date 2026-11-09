@@ -1,0 +1,152 @@
+import ReservationRepository from "../repositories/reservation.repository";
+import PublicationRepository from "../repositories/publication.repository";
+import NotificationService from "./notification.service";
+import AppError from "../utils/AppError";
+
+class ReservationService {
+    async createReservation(donorId: string, publicationId: string, itemId: string): Promise<any> {
+        const publication = await PublicationRepository.atomicReserveItem(publicationId, itemId);
+
+        if (!publication) {
+            throw new AppError("NEED_NOT_AVAILABLE", 409, "La necesidad fue reservada");
+        }
+
+        try {
+            const reservation = await ReservationRepository.create({
+                publication_id: publicationId as any,
+                item_id: itemId as any,
+                donor_id: donorId as any,
+                status: "reservado"
+            });
+
+            const beneficiaryId = publication.user_id.toString();
+            const item = publication.necesidades.find((n: any) => n._id.toString() === itemId);
+
+            await NotificationService.createNotification(
+                beneficiaryId,
+                "confirmación",
+                `Un donante ha reservado el ítem: ${item?.name || "no especificado"}`
+            );
+
+            return reservation;
+        } catch (error) {
+            await PublicationRepository.updateItemStatus(publicationId, itemId, "disponible");
+            throw error;
+        }
+    }
+
+    async cancelReservation(reservationId: string, donorId: string): Promise<any> {
+        const reservation = await ReservationRepository.findById(reservationId);
+
+        if (!reservation) {
+            throw new AppError("NOT_FOUND", 404, "La reserva no existe");
+        }
+
+        if (reservation.donor_id.toString() !== donorId) {
+            throw new AppError("FORBIDDEN", 403, "No tienes permiso para cancelar esta reserva");
+        }
+
+        if (reservation.status !== "reservado") {
+            throw new AppError("INVALID_STATE_TRANSITION", 409, "Solo se pueden cancelar reservas en estado 'reservado'");
+        }
+
+        const updatedReservation = await ReservationRepository.update(reservationId, { status: "cancelada" });
+
+        try {
+            await PublicationRepository.updateItemStatus(
+                reservation.publication_id.toString(),
+                reservation.item_id.toString(),
+                "disponible"
+            );
+        } catch (error) {
+            // Revertimos el estado de la reserva si falla la actualización de la publicación
+            await ReservationRepository.update(reservationId, { status: "reservado" });
+            throw error;
+        }
+
+        const publication = await PublicationRepository.findById(reservation.publication_id.toString());
+        if (publication) {
+            await NotificationService.createNotification(
+                publication.user_id.toString(),
+                "alerta pendiente",
+                `Se ha cancelado la reserva del ítem: ${publication.necesidades.find((n: any) => n._id.toString() === reservation.item_id.toString())?.name || "no especificado"}`
+            );
+        }
+
+        return updatedReservation;
+    }
+
+    async confirmDelivery(reservationId: string, userId: string): Promise<any> {
+        const reservation = await ReservationRepository.findById(reservationId);
+
+        if (!reservation) {
+            throw new AppError("NOT_FOUND", 404, "La reserva no existe");
+        }
+
+        const publication = await PublicationRepository.findById(reservation.publication_id.toString());
+        if (!publication) throw new AppError("NOT_FOUND", 404, "La publicación asociada no existe");
+
+        const isParticipant = (reservation.donor_id.toString() === userId ||
+                             publication.user_id.toString() === userId);
+
+        if (!isParticipant) {
+            throw new AppError("FORBIDDEN", 403, "No tienes permiso para confirmar esta entrega");
+        }
+
+        if (reservation.status !== "reservado") {
+            throw new AppError("INVALID_STATE_TRANSITION", 409, "La reserva no está en estado 'reservado'");
+        }
+
+        const updatedReservation = await ReservationRepository.update(reservationId, {
+            status: "entregado",
+            delivered_at: new Date()
+        });
+
+        try {
+            await PublicationRepository.updateItemStatus(
+                reservation.publication_id.toString(),
+                reservation.item_id.toString(),
+                "entregado"
+            );
+        } catch (error) {
+            // Revertimos el estado de la reserva si falla la actualización de la publicación
+            await ReservationRepository.update(reservationId, { status: "reservado" });
+            throw error;
+        }
+
+        await NotificationService.createNotification(
+            publication.user_id.toString(),
+            "confirmación",
+            `Se ha confirmado la entrega del ítem: ${publication.necesidades.find((n: any) => n._id.toString() === reservation.item_id.toString())?.name || "no especificado"}`
+        );
+
+        return updatedReservation;
+    }
+
+    async getReservationById(id: string, userId: string, role: string): Promise<any> {
+        const reservation = await ReservationRepository.findById(id);
+        if (!reservation) throw new AppError("NOT_FOUND", 404, "La reserva no existe");
+
+        if (role === "admin") {
+            return reservation;
+        }
+
+        const publication = await PublicationRepository.findById(reservation.publication_id.toString());
+        if (!publication) throw new AppError("NOT_FOUND", 404, "La publicación asociada no existe");
+
+        const isParticipant = (reservation.donor_id.toString() === userId ||
+                             publication.user_id.toString() === userId);
+
+        if (!isParticipant) {
+            throw new AppError("FORBIDDEN", 403, "No tienes permiso para ver esta reserva");
+        }
+
+        return reservation;
+    }
+
+    async listUserReservations(userId: string, options: any): Promise<any> {
+        return await ReservationRepository.findByDonor(userId, options);
+    }
+}
+
+export default new ReservationService();

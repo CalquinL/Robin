@@ -19,7 +19,7 @@ Mongoose gestiona las colecciones siguiendo la convención de nombres en minúsc
   rel/.style={thick,umdark},
   card/.style={font=\\scriptsize\\bfseries,text=robinorange,fill=white,inner sep=1pt}]
   \\node[ent] (u) at (0,0) {\\textcolor{white}{\\bfseries Usuario}\\nodepart{second}\\raggedright
-    \\_id\\en space name, surname, nick\\en space email, password (hash)\\en space role, address, phone, verified};
+    \\_id\\en space name, surname, nick\\en space email, password (hash)\\en space role, address, phone, verified\\en space saved\_publications[ ]};
   \\node[ent] (p) at (8.2,0) {\\textcolor{white}{\\bfseries Publicación}\\nodepart{second}\\raggedright
     \\_id, user\_id\\en space text, file, status, created\_at\\en space
     \\textcolor{umdark}{\\bfseries necesidades[ ] embebidas}\\en space name, status};
@@ -51,6 +51,7 @@ publications $\rightarrow$ necesidades & 1:N & Subdocumentos embebidos &\\
 users $\rightarrow$ reservations & 1:N & \\code{reservations.donor\_id} &\\
 necesidades $\rightarrow$ reservations & 1:0..1 activa & \\code{publication\_id} e \\code{item\_id} &\\
 users $\rightarrow$ notifications & 1:N & \\code{notifications.user\_id} &\\
+users $\rightarrow$ publications (guardados) & N:N & \\code{users.saved\_publications[ ]} &\\
 \\bottomrule
 \\end{tabularx}
 \\end{center}
@@ -63,7 +64,8 @@ users $\rightarrow$ notifications & 1:N & \\code{notifications.user\_id} &\\
   email: String (unique), password: String (hash), 
   role: String (beneficiario | donante | admin), 
   image: String, address: String, phone: String, verified: Boolean,
-  created_at: Date }
+  created_at: Date,
+  saved_publications: [ObjectId] } // referencias a Publication (Guardados)
 
 // publications
 { _id: ObjectId, user_id: ObjectId, text: String, file: String,
@@ -98,13 +100,11 @@ users $\rightarrow$ notifications & 1:N & \\code{notifications.user\_id} &\\
 \\toprule
 \\textbf{Colección} & \\textbf{Índice} & \\textbf{Propósito}\\.\\midrule
 users & email único, nick único & Garantizar la unicidad de identidad.\\
-publications & \\code{\\{status:1, created\_at:-1\}} & Optimizar el feed de publicaciones aprobadas.\\
-publications & \\code{\\{user\_id:1\}} & Agilizar la búsqueda de publicaciones por usuario.\\
-reservations & \\code{\\{donor\_id:1, status:1\}} & Filtrar reservas del usuario por estado.\\
-notifications & \\code{\\{user\_id:1, read:1, created\_at:-1\}} & Recuperar notificaciones no leídas y recientes.\\
+publications, reservations, notifications & solo \\code{\\_id} (por defecto) & Sin índices compuestos declarados en el esquema; las consultas por \\code{status}, \\code{donor\_id} o \\code{user\_id} se resuelven sin índice de soporte.\\
 \\bottomrule
 \\end{tabularx}
 \\end{center}
+\\pendiente{No hay índices compuestos para el feed por \\code{status}, para reservas por \\code{donor\_id}+\\code{status} ni para notificaciones por \\code{user\_id}+\\code{read}, aunque esos son los patrones de consulta reales en los repositories. Con el volumen de datos de este proyecto no afecta el rendimiento observable, pero es deuda técnica declarada.}
 
 \\subsection{Scripts y credenciales}
 
@@ -114,11 +114,12 @@ La arquitectura de persistencia se divide en dos componentes con responsabilidad
 
 \begin{enumerate}
     \item \textbf{Gestión de Conexión (\ruta{src/database/connection.ts}):} Es la infraestructura que mantiene el enlace activo entre la aplicación y MongoDB. Se ejecuta en cada arranque del servidor, leyendo la \code{MONGODB\_URI} del archivo de entorno para establecer la comunicación persistente.
-    \item \textbf{Inicialización de Base de Datos (\ruta{db/init-db.js}):} Es un script de configuración que se ejecuta manualmente (vía \code{npm run db:init}) para preparar la base de datos desde cero. Sus funciones principales son:
+    \item \textbf{Inicialización de Base de Datos (\ruta{db/init.ts}):} Es un script que se ejecuta manualmente (vía \code{npm run db:init}) para preparar la base de datos desde cero (es destructivo a propósito: vacía las colecciones antes de recrearlas). Sus funciones principales son:
     \begin{itemize}
-        \item Crear las colecciones necesarias.
-        \item Sincronizar los índices optimizados definidos en los modelos (ej. unicidad de email y nick).
-        \item Crear el usuario administrador inicial utilizando las credenciales definidas en el archivo de entorno.
+        \item Vaciar las cuatro colecciones (\code{users}, \code{publications}, \code{reservations}, \code{notifications}).
+        \item Sincronizar los índices definidos en los modelos (ej. unicidad de email y nick) con \code{syncIndexes()}.
+        \item Crear el usuario administrador inicial. El rol \code{admin} no se puede crear por registro público.
+        \item Crear datos de prueba: un \code{beneficiario}, un \code{donante} y una publicación de ese beneficiario ya \code{aprobada} con dos necesidades \code{disponible}, para poder probar el flujo de reserva sin registrarse a mano.
     \end{itemize}
 \end{enumerate}
 
@@ -129,8 +130,8 @@ A continuación se muestra el flujo de arranque recomendado y la configuración 
 cp .env.example .env       # Crear archivo de entorno local
 npm install                 # Instalar dependencias del proyecto
 
-# 2. Preparacion de la base de datos (Solo la primera vez o tras reset)
-npm run db:init             # Crear colecciones, indices y usuario admin
+# 2. Preparacion de la base de datos (destructivo: vacia y recrea)
+npm run db:init             # Limpia, sincroniza indices y crea admin + datos de prueba
 
 # 3. Ejecucion del servicio
 npm run dev                 # Arranca servidor en modo desarrollo (watch)
@@ -138,21 +139,20 @@ npm run dev                 # Arranca servidor en modo desarrollo (watch)
 
 \\begin{lstlisting}[language={}]
 # .env.example (Valores de ejemplo)
-PORT=3000
-MONGODB_URI=mongodb://localhost:27017/robin
+PORT=3900
+MONGODB_URI=mongodb://localhost:27017/robin_db
 JWT_SECRET=clave-secreta-aleatoria-larga
 JWT_EXPIRES_IN=24h
 CORS_ORIGIN=http://localhost:5173
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=clave-segura-admin
+UPLOAD_DIR=uploads/publications
 \\end{lstlisting}
 
 \\begin{lstlisting}[language={}]
 # .gitignore
 node_modules/
+dist/
 .env
-.env.*
-!.env.example
+.env.local
 uploads/*
 !uploads/.gitkeep
 \\end{lstlisting}
@@ -164,4 +164,5 @@ uploads/*
 \\item \\textbf{Mínimo privilegio:} Se utiliza una URI de conexión restringida al entorno de la base de datos.
 \\item \\textbf{Secretos robustos:} El \\code{JWT\_SECRET} se define como una cadena larga y aleatoria para prevenir ataques de fuerza bruta.
 \\item \\textbf{Rotación de credenciales:} En caso de exposición, se invalida la clave y se se limpia el historial de Git para eliminar cualquier rastro del secreto.
+\\item \\textbf{CORS acotado por configuración:} el middleware \\code{cors} lee el origen permitido desde \\code{CORS\_ORIGIN} en vez de aceptar cualquier origen por defecto.
 \\end{enumerate}

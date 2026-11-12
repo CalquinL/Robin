@@ -6,7 +6,7 @@ El sistema utiliza MongoDB con un enfoque mixto de persistencia (referencias y e
 
 ### 1. Users (`users`)
 Almacena la información de los usuarios y sus credenciales.
-- **Campos**: `name`, `surname`, `nick` (único), `email` (único), `password`, `role` (enum), `image`, `address`, `phone`, `verified`, `created_at`.
+- **Campos**: `name`, `surname`, `nick` (único), `email` (único), `password`, `role` (enum), `image`, `address`, `phone`, `verified`, `created_at`, `saved_publications` (arreglo de `ObjectId` referenciando `Publication`, para "Guardados").
 - **Roles**: `beneficiario`, `donante`, `admin`.
 
 ### 2. Publications (`publications`)
@@ -31,3 +31,4 @@ Alertas del sistema para los usuarios.
 - **Publicación $\rightarrow$ Necesidad**: Relación 1:N embebida. Permite consultas rápidas del estado de los ítems.
 - **Reserva $\rightarrow$ Publicación/Usuario**: Relación de referencia.
 - **Reserva Atómica**: El flujo de reserva actualiza primero el estado de la necesidad embebida en `publications` y luego crea el documento en `reservations`.
+- **Guardados**: `users.saved_publications` es un arreglo de referencias (no copias) a `publications`, actualizado con operadores atómicos de conjunto (`$addToSet`/`$pull`), por lo que guardar o quitar la misma publicación dos veces no produce duplicados ni error.

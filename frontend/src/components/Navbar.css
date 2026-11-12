@@ -1,0 +1,108 @@
+.navbar {
+  background-color: var(--naranja-principal);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-left {
+  background: var(--blanco);
+  border-radius: 20px;
+  padding: 8px 15px;
+  display: flex;
+  align-items: center;
+  max-width: 500px;
+  width: 100%;
+  gap: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.nav-left:focus-within {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.7);
+}
+
+.nav-left svg {
+  width: 18px;
+  height: 18px;
+  stroke: #555;
+  fill: none;
+  flex-shrink: 0;
+}
+
+.nav-left input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #555;
+  font-size: 16px;
+  width: 100%;
+}
+
+.nav-left input::placeholder {
+  color: #aaa;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.nav-btn {
+  color: white;
+  text-decoration: none;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: 0.3s;
+  cursor: pointer;
+}
+
+.nav-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: #ffffff;
+  fill: none;
+  flex-shrink: 0;
+}
+
+.nav-btn:hover,
+.nav-btn.active {
+  background-color: var(--naranja-oscuro);
+}
+
+.nav-btn-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.notification-badge {
+  background-color: #ff4d4d;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 1000px) {
+  .nav-left {
+    display: none;
+  }
+}

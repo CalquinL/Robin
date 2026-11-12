@@ -2,6 +2,7 @@ import ReservationRepository from "../repositories/reservation.repository";
 import PublicationRepository from "../repositories/publication.repository";
 import NotificationService from "./notification.service";
 import AppError from "../utils/AppError";
+import { ReservationStatus, Role } from "../types/domain";
 
 class ReservationService {
     async createReservation(donorId: string, publicationId: string, itemId: string): Promise<any> {
@@ -127,25 +128,28 @@ class ReservationService {
         const reservation = await ReservationRepository.findById(id);
         if (!reservation) throw new AppError("NOT_FOUND", 404, "La reserva no existe");
 
-        if (role === "admin") {
-            return reservation;
+        if (role !== "admin") {
+            const publication = await PublicationRepository.findById(reservation.publication_id.toString());
+            if (!publication) throw new AppError("NOT_FOUND", 404, "La publicación asociada no existe");
+
+            const isParticipant = (reservation.donor_id.toString() === userId ||
+                                 publication.user_id.toString() === userId);
+
+            if (!isParticipant) {
+                throw new AppError("FORBIDDEN", 403, "No tienes permiso para ver esta reserva");
+            }
         }
 
-        const publication = await PublicationRepository.findById(reservation.publication_id.toString());
-        if (!publication) throw new AppError("NOT_FOUND", 404, "La publicación asociada no existe");
-
-        const isParticipant = (reservation.donor_id.toString() === userId ||
-                             publication.user_id.toString() === userId);
-
-        if (!isParticipant) {
-            throw new AppError("FORBIDDEN", 403, "No tienes permiso para ver esta reserva");
-        }
-
-        return reservation;
+        // Ya autorizado: se trae la versión con donante/beneficiario/necesidad para mostrar en pantalla.
+        return await ReservationRepository.findByIdWithDetails(id);
     }
 
-    async listUserReservations(userId: string, options: any): Promise<any> {
-        return await ReservationRepository.findByDonor(userId, options);
+    async listUserReservations(userId: string, role: Role, options: any, status?: ReservationStatus): Promise<any> {
+        if (role === "beneficiario") {
+            const publicationIds = await PublicationRepository.findIdsByOwner(userId);
+            return await ReservationRepository.findByPublicationIds(publicationIds, options, status);
+        }
+        return await ReservationRepository.findByDonor(userId, options, status);
     }
 }
 

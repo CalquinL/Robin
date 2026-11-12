@@ -41,10 +41,10 @@ La mayoría de los endpoints requieren un token JWT enviado en la cabecera:
 
 ## 🚀 Endpoints
 
-### 1. Autenticación (`/auth`)
+### 1. Autenticación (bajo `/users`, no hay prefijo `/auth` en el código)
 
 #### Registrar Usuario
-- **Ruta**: `POST http://localhost:3900/api/v1/auth/register`
+- **Ruta**: `POST http://localhost:3900/api/v1/users/register`
 - **Acceso**: Público
 - **Cuerpo**:
 ```json
@@ -57,11 +57,12 @@ La mayoría de los endpoints requieren un token JWT enviado en la cabecera:
   "role": "donante" 
 }
 ```
+- `role` solo admite `beneficiario` o `donante`; si se envía `admin` (o cualquier otro valor), responde `400 VALIDATION_ERROR`. El rol `admin` solo se crea con `db/init.ts`.
 - **Éxito**: `201 Created`
-- **Errores**: `400` (Datos inválidos), `409` (Email o Nick duplicado).
+- **Errores**: `400` (Datos inválidos o rol no permitido), `409` (Email o Nick duplicado).
 
 #### Iniciar Sesión
-- **Ruta**: `POST http://localhost:3900/api/v1/auth/login`
+- **Ruta**: `POST http://localhost:3900/api/v1/users/login`
 - **Acceso**: Público
 - **Cuerpo**:
 ```json
@@ -90,25 +91,25 @@ La mayoría de los endpoints requieren un token JWT enviado en la cabecera:
 - **Éxito**: `200 OK`
 - **Errores**: `400`.
 
-#### Listar Usuarios (Paginado)
-- **Ruta**: `GET http://localhost:3900/api/v1/users/list/{page}`
-- **Parámetros**: `{page}` (Número de página).
-- **Acceso**: Autenticado (Token)
-- **Éxito**: `200 OK`
-- **Errores**: `400`.
-
-#### Actualizar Perfil
+#### Actualizar Perfil (y, opcionalmente, cambiar contraseña)
 - **Ruta**: `PATCH http://localhost:3900/api/v1/users/update`
 - **Acceso**: Autenticado (Token)
-- **Cuerpo**:
+- **Cuerpo** (todos los campos son opcionales):
 ```json
 {
   "address": "Calle Falsa 123",
   "phone": "+5912345678"
 }
 ```
+Para cambiar la contraseña, en vez de (o junto con) los campos anteriores:
+```json
+{
+  "current_password": "claveActual123",
+  "new_password": "claveNueva456"
+}
+```
 - **Éxito**: `200 OK`
-- **Errores**: `400` (Datos inválidos), `409` (Nick ya usado).
+- **Errores**: `400` (Datos inválidos, o falta `current_password` al enviar `new_password`), `401` (`current_password` incorrecta), `404` (usuario no existe), `409` (Nick ya usado).
 
 #### Subir Avatar
 - **Ruta**: `POST http://localhost:3900/api/v1/users/upload`
@@ -123,6 +124,27 @@ La mayoría de los endpoints requieren un token JWT enviado en la cabecera:
 - **Acceso**: Público
 - **Éxito**: `200 OK` (Archivo imagen).
 - **Errores**: `404` (Imagen no encontrada).
+
+#### Ver Publicaciones Guardadas
+- **Ruta**: `GET http://localhost:3900/api/v1/users/saved-publications`
+- **Acceso**: Autenticado (Token)
+- **Params**: `page`, `limit` (opcionales).
+- **Éxito**: `200 OK`
+- **Errores**: `400`.
+
+#### Guardar una Publicación
+- **Ruta**: `POST http://localhost:3900/api/v1/users/saved-publications`
+- **Acceso**: Autenticado (Token)
+- **Cuerpo**: `{ "publication_id": "..." }`
+- **Éxito**: `201 Created`
+- **Errores**: `400` (Falta `publication_id`), `404` (La publicación no existe).
+
+#### Quitar una Publicación Guardada
+- **Ruta**: `DELETE http://localhost:3900/api/v1/users/saved-publications/{publicationId}`
+- **Parámetros**: `{publicationId}`.
+- **Acceso**: Autenticado (Token)
+- **Éxito**: `204 No Content`. Operación idempotente: si no estaba guardada, también responde `204` (no hay chequeo de existencia).
+- **Errores**: —
 
 ---
 
@@ -144,18 +166,18 @@ La mayoría de los endpoints requieren un token JWT enviado en la cabecera:
 - **Éxito**: `201 Created`
 - **Errores**: `400` (Faltan datos), `403` (Solo beneficiarios).
 
-#### Listar Publicaciones Aprobadas
+#### Listar Publicaciones
 - **Ruta**: `GET http://localhost:3900/api/v1/publications`
 - **Acceso**: Autenticado (Token)
-- **Params**: `page`, `limit` (opcionales).
-- **Éxito**: `200 OK`
+- **Params**: `page`, `limit` (opcionales). `status` (opcional, solo tiene efecto para rol `admin`: `pendiente` | `aprobada` | `rechazada`; para cualquier otro rol se ignora y siempre devuelve `aprobada`). `search` (opcional): busca coincidencia de texto en la historia, en el nombre de una necesidad o en el nombre del autor.
+- **Éxito**: `200 OK`. Cada publicación incluye `author: { name, nick, image }` con los datos públicos del beneficiario (además de `user_id`, que no cambia).
 - **Errores**: `400`.
 
 #### Detalle de Publicación
 - **Ruta**: `GET http://localhost:3900/api/v1/publications/{id}`
 - **Parámetros**: `{id}` (ID de publicación).
 - **Acceso**: Autenticado (Token)
-- **Éxito**: `200 OK`
+- **Éxito**: `200 OK`. Igual que el listado, incluye `author: { name, nick, image }`.
 - **Errores**: `400` (ID mal formado), `404` (No encontrada).
 
 #### Editar Publicación
@@ -189,13 +211,19 @@ La mayoría de los endpoints requieren un token JWT enviado en la cabecera:
 - **Éxito**: `200 OK`
 - **Errores**: `400`, `403`, `404`, `415` (Tipo no permitido).
 
+#### Obtener Imagen de Publicación
+- **Ruta**: `GET http://localhost:3900/uploads/publications/{file}` (archivo estático, fuera de `/api/v1`; el nombre viene en el campo `file` de la publicación).
+- **Acceso**: Público
+- **Éxito**: `200 OK` (archivo imagen)
+- **Errores**: `404` (archivo no encontrado).
+
 #### Publicaciones de un Usuario
-- **Ruta**: `GET http://localhost:3900/api/v1/publications/users/{id}/publications`
+- **Ruta**: `GET http://localhost:3900/api/v1/users/{id}/publications`
 - **Parámetros**: `{id}` (ID del usuario).
 - **Acceso**: Autenticado (Token)
 - **Params**: `page`, `limit` (opcionales).
-- **Éxito**: `200 OK`
-- **Errores**: `400`, `404`.
+- **Éxito**: `200 OK`. Incluye todas las publicaciones de ese usuario, sin filtrar por `status` (si se consulta sobre uno mismo se ven las propias `pendiente`/`rechazada` también).
+- **Errores**: `400`.
 
 ---
 
@@ -212,26 +240,46 @@ La mayoría de los endpoints requieren un token JWT enviado en la cabecera:
 }
 ```
 - **Éxito**: `201 Created`
-- **Errores**: `400`, `403`, `404`, `409` (Ítem ya reservado).
+- **Errores**: `400`, `403`, `409` (publicación no existe/no aprobada, o ítem no existe/no disponible: todos estos casos devuelven el mismo `409 NEED_NOT_AVAILABLE`, no hay un `404` distinto).
 
 #### Mis Reservaciones
 - **Ruta**: `GET http://localhost:3900/api/v1/reservations`
-- **Acceso**: Autenticado (Token)
-- **Params**: `page`, `limit`, `status` (opcionales).
-- **Éxito**: `200 OK`
+- **Acceso**: Autenticado (Token). Si el rol es `donante`, devuelve las reservas donde es el donante; si es `beneficiario`, las reservas de SUS publicaciones.
+- **Params**: `page`, `limit`, `status` (opcionales: `reservado` | `entregado` | `cancelada`).
+- **Éxito**: `200 OK`. Cada reserva incluye `donor: { name, nick, image }`, `beneficiary: { name, nick, image }`, `need_name` y `publication_text` (además de `donor_id`/`publication_id`, que no cambian).
 - **Errores**: `400`.
 
 #### Detalle de Reservación
 - **Ruta**: `GET http://localhost:3900/api/v1/reservations/{id}`
 - **Parámetros**: `{id}` (ID de reserva).
 - **Acceso**: Participante (Donante/Beneficiario) o Admin (Token)
-- **Éxito**: `200 OK`
+- **Éxito**: `200 OK`. Igual que el listado, incluye `donor`, `beneficiary`, `need_name`, `publication_text`.
 - **Errores**: `403` (No autorizado), `404`.
 
 #### Cambiar Estado de Reserva
 - **Ruta**: `PATCH http://localhost:3900/api/v1/reservations/{id}/status`
 - **Parámetros**: `{id}` (ID de reserva).
-- **Acceso**: Participante (Donante/Beneficiario) (Token)
-- **Cuerpo**: `{ "status": "cancelada" }` o `{ "status": "entregado" }`
+- **Acceso**: `{ "status": "cancelada" }` → solo el donante de la reserva. `{ "status": "entregado" }` → el donante o el beneficiario dueño de la publicación (cualquiera de los dos).
 - **Éxito**: `200 OK`
-- **Errores**: `400`, `403`, `404`, `409` (Transición inválida).
+- **Errores**: `400`, `403`, `404`, `409` (Transición inválida; p. ej. la reserva no está en `reservado`).
+
+---
+
+### 5. Notificaciones (`/notifications`)
+
+#### Mis Notificaciones
+- **Ruta**: `GET http://localhost:3900/api/v1/notifications`
+- **Acceso**: Autenticado (Token)
+- **Params**: `read` (`true`/`false`, opcional), `page`, `limit` (opcionales).
+- **Éxito**: `200 OK`
+- **Errores**: `400`.
+
+#### Marcar como Leída
+- **Ruta**: `PATCH http://localhost:3900/api/v1/notifications/{id}`
+- **Parámetros**: `{id}` (ID de notificación).
+- **Acceso**: Dueño de la notificación (Token)
+- **Cuerpo**: `{ "read": true }` (solo se admite `true`).
+- **Éxito**: `200 OK`
+- **Errores**: `400` (valor distinto de `true`), `403`, `404`.
+
+Las notificaciones las crea el propio servidor como efecto de otras acciones (reserva creada o cancelada, publicación aprobada o rechazada, entrega confirmada); no hay un endpoint para crearlas directamente.

@@ -1,0 +1,8 @@
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  background: var(--blanco);
+  border-radius: 12px;
+  border: 1px solid var(--gris-borde);
+  color: var(--gris-texto);
+}

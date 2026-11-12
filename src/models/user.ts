@@ -14,6 +14,7 @@ export interface IUser extends Document {
     phone?: string;
     verified: boolean;
     created_at: Date;
+    saved_publications: Schema.Types.ObjectId[];
 }
 
 const UserSchema = new Schema<IUser>({
@@ -31,7 +32,8 @@ const UserSchema = new Schema<IUser>({
     address: String,
     phone: String,
     verified: { type: Boolean, default: false },
-    created_at: { type: Date, default: Date.now }
+    created_at: { type: Date, default: Date.now },
+    saved_publications: [{ type: Schema.Types.ObjectId, ref: "Publication", default: [] }]
 });
 
 UserSchema.plugin(mongoosePaginate);

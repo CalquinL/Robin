@@ -2,7 +2,7 @@ import userRepository from "../repositories/user.repository";
 import bcrypt from "bcrypt";
 import * as jwtService from "../services/jwt";
 import AppError from "../utils/AppError";
-import { Role } from "../types/domain";
+import { REGISTERABLE_ROLES, Role } from "../types/domain";
 
 interface AuthLoginResponse {
     user: {
@@ -16,6 +16,11 @@ interface AuthLoginResponse {
 
 class AuthService {
     async register(userData: any): Promise<any> {
+        // El admin no se puede autoasignar en el registro (sección 5 de CLAUDE.md).
+        if (!(REGISTERABLE_ROLES as readonly string[]).includes(userData.role)) {
+            throw new AppError("VALIDATION_ERROR", 400, "El rol debe ser beneficiario o donante");
+        }
+
         // Control de duplicados
         const existingUser = await userRepository.findByCriteria({
             email: userData.email,

@@ -1,6 +1,10 @@
 export const ROLES = ["beneficiario", "donante", "admin"] as const;
 export type Role = (typeof ROLES)[number];
 
+// El admin no se asigna por registro público (sección 5): solo estos dos roles.
+export const REGISTERABLE_ROLES = ["beneficiario", "donante"] as const;
+export type RegisterableRole = (typeof REGISTERABLE_ROLES)[number];
+
 export const PUBLICATION_STATUS = ["pendiente", "aprobada", "rechazada"] as const;
 export type PublicationStatus = (typeof PUBLICATION_STATUS)[number];
 

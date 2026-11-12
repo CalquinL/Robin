@@ -3,6 +3,7 @@ import authService from "../services/auth.service";
 import userService from "../services/user.service";
 import { sendSuccess } from "../utils/response";
 import AppError from "../utils/AppError";
+import { serializePublication } from "../utils/serializePublication";
 import path from "path";
 import fs from "fs";
 
@@ -48,7 +49,7 @@ class UserController {
 
     async profile(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const userId = req.user?.id || (req.params.id as string);
+            const userId = req.params.id as string;
             const user = await userService.getUserById(userId);
 
             if (!user) {
@@ -141,13 +142,53 @@ class UserController {
 
             const fileName = req.file.filename;
 
-            // Llamamos al servicio sin asignar el resultado a una variable no utilizada
-            await userService.updateProfile(userId, { image: fileName });
+            await userService.updateAvatar(userId, fileName);
 
             sendSuccess(res, {
                 message: "Imagen subida con éxito",
                 image: fileName
             }, 200);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async listSaved(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = Math.min(parseInt(req.query.limit as string) || 10, 50);
+
+            const { docs, total } = await userService.listSavedPublications(req.user!.id, page, limit);
+
+            sendSuccess(res, docs.map(serializePublication), 200, {
+                page,
+                limit,
+                total,
+                pages: Math.ceil(total / limit) || 1
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async savePublication(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { publication_id } = req.body;
+            if (!publication_id) {
+                throw new AppError("VALIDATION_ERROR", 400, "El publication_id es obligatorio");
+            }
+
+            await userService.savePublication(req.user!.id, publication_id);
+            sendSuccess(res, { publication_id, saved: true }, 201);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async unsavePublication(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            await userService.unsavePublication(req.user!.id, req.params.publicationId as string);
+            res.status(204).send();
         } catch (error) {
             next(error);
         }

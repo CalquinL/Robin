@@ -1,0 +1,41 @@
+.create-publication-card {
+  max-width: 600px;
+}
+
+.needs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.need-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.need-row input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--gris-borde);
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.need-row input:focus {
+  border-color: var(--naranja-principal);
+  outline: 2px solid var(--naranja-principal);
+  outline-offset: 1px;
+}
+
+.btn-remove-need {
+  background: none;
+  border: none;
+  color: #d9534f;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  white-space: nowrap;
+}

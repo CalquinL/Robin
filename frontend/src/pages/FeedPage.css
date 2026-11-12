@@ -1,0 +1,115 @@
+.user-profile-card .user-info-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.user-profile-card .user-info-header .avatar-circle {
+  width: 70px;
+  height: 70px;
+  margin: 0 0 10px 0;
+  font-size: 22px;
+}
+
+.user-profile-card .user-info-header h4 {
+  margin: 0;
+}
+
+.user-profile-card .user-profile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.user-profile-card .btn-action {
+  text-align: center;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.create-post {
+  background: var(--blanco);
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid var(--gris-borde);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.create-post-text {
+  flex: 1;
+  border: 1px solid var(--gris-borde);
+  border-radius: 20px;
+  padding: 10px 15px;
+  font-size: 14px;
+  background: var(--gris-claro);
+  color: var(--gris-texto);
+}
+
+.create-post-btn {
+  width: 100%;
+  background-color: var(--naranja-principal);
+  color: white;
+  border: none;
+  padding: 15px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: 0.3s;
+  text-decoration: none;
+}
+
+.create-post-btn:hover {
+  background-color: var(--naranja-oscuro);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+  font-size: 14px;
+  color: var(--gris-texto);
+}
+
+.recent-notifications-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.recent-notification-item {
+  display: block;
+  text-decoration: none;
+  padding: 8px;
+  border: 2px solid var(--verde-principal);
+  border-radius: 8px;
+  transition: 0.2s;
+}
+
+.recent-notification-item:hover {
+  background: var(--gris-claro);
+}
+
+.recent-notification-item p {
+  font-size: 13px;
+  color: #333;
+  margin: 0 0 4px;
+}

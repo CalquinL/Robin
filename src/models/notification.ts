@@ -1,5 +1,6 @@
 import { Schema, model, Document } from "mongoose";
-import { NotificationType } from "../types/domain";
+import mongoosePaginate from "mongoose-paginate-v2";
+import { NotificationType, NOTIFICATION_TYPE } from "../types/domain";
 
 export interface INotification extends Document {
     user_id: Schema.Types.ObjectId;
@@ -17,7 +18,7 @@ const NotificationSchema = new Schema<INotification>({
     },
     type: {
         type: String,
-        enum: ["confirmación", "alerta pendiente", "conflicto"],
+        enum: NOTIFICATION_TYPE,
         required: true
     },
     message: {
@@ -33,5 +34,7 @@ const NotificationSchema = new Schema<INotification>({
         default: Date.now
     }
 });
+
+NotificationSchema.plugin(mongoosePaginate);
 
 export default model<INotification>("Notification", NotificationSchema, "notifications");

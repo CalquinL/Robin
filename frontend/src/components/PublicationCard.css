@@ -1,0 +1,50 @@
+.story-card {
+  background: var(--blanco);
+  border-radius: 12px;
+  border: 1px solid var(--gris-borde);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.story-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+}
+
+.story-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.story-info h4 {
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.story-info span {
+  font-size: 14px;
+  color: var(--gris-texto);
+}
+
+.story-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.story-actions .btn-action {
+  text-decoration: none;
+}
+
+.story-content {
+  padding: 0 15px 15px;
+}
+
+.story-content p {
+  margin-bottom: 15px;
+  font-size: 16px;
+}

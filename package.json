@@ -11,7 +11,8 @@
     "start": "node dist/server.js",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "dev": "tsx watch src/server.ts"
+    "dev": "tsx watch src/server.ts",
+    "db:init": "tsx db/init.ts"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

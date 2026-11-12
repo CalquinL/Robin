@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import publicationService from "../services/publication.service";
 import { sendSuccess } from "../utils/response";
 import AppError from "../utils/AppError";
+import { PUBLICATION_STATUS, PublicationStatus } from "../types/domain";
+import { serializePublication } from "../utils/serializePublication";
 
 class PublicationController {
     async create(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -16,21 +18,7 @@ class PublicationController {
 
             const publication = await publicationService.createPublication(userId, req.body);
 
-            const filteredPublication = {
-                _id: publication._id,
-                user_id: publication.user_id,
-                text: publication.text,
-                file: publication.file,
-                status: publication.status,
-                created_at: publication.created_at,
-                necesidades: publication.necesidades.map((n: any) => ({
-                    _id: n._id,
-                    name: n.name,
-                    status: n.status
-                }))
-            };
-
-            sendSuccess(res, filteredPublication, 201);
+            sendSuccess(res, serializePublication(publication), 201);
         } catch (error) {
             next(error);
         }
@@ -39,23 +27,9 @@ class PublicationController {
     async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const id = String(req.params.id);
-            const publication = await publicationService.getPublicationById(id);
+            const publication = await publicationService.getPublicationWithAuthor(id);
 
-            const filteredPublication = {
-                _id: publication._id,
-                user_id: publication.user_id,
-                text: publication.text,
-                file: publication.file,
-                status: publication.status,
-                created_at: publication.created_at,
-                necesidades: publication.necesidades.map((n: any) => ({
-                    _id: n._id,
-                    name: n.name,
-                    status: n.status
-                }))
-            };
-
-            sendSuccess(res, filteredPublication, 200);
+            sendSuccess(res, serializePublication(publication), 200);
         } catch (error) {
             next(error);
         }
@@ -72,9 +46,22 @@ class PublicationController {
                 sort: { created_at: -1 }
             };
 
-            const result = await publicationService.listApprovedPublications(options);
+            // El feed público siempre es "aprobada". Solo el admin puede pedir otro
+            // estado (p. ej. "pendiente" para moderar) pasando ?status=.
+            let status: PublicationStatus = "aprobada";
+            const requestedStatus = req.query.status;
+            if (
+                req.user?.role === "admin" &&
+                typeof requestedStatus === "string" &&
+                (PUBLICATION_STATUS as readonly string[]).includes(requestedStatus)
+            ) {
+                status = requestedStatus as PublicationStatus;
+            }
 
-            sendSuccess(res, result.docs, 200, {
+            const search = typeof req.query.search === "string" ? req.query.search : undefined;
+            const result = await publicationService.listPublications(options, status, search);
+
+            sendSuccess(res, result.docs.map(serializePublication), 200, {
                 page: result.page,
                 limit: result.limit,
                 total: result.totalDocs,
@@ -99,7 +86,7 @@ class PublicationController {
 
             const result = await publicationService.listUserPublications(userId, options);
 
-            sendSuccess(res, result.docs, 200, {
+            sendSuccess(res, result.docs.map(serializePublication), 200, {
                 page: result.page,
                 limit: result.limit,
                 total: result.totalDocs,
@@ -122,21 +109,7 @@ class PublicationController {
                 throw new AppError("NOT_FOUND", 404, "La publicación no existe o no tienes permiso para editarla");
             }
 
-            const filteredPublication = {
-                _id: updated._id,
-                user_id: updated.user_id,
-                text: updated.text,
-                file: updated.file,
-                status: updated.status,
-                created_at: updated.created_at,
-                necesidades: updated.necesidades.map((n: any) => ({
-                    _id: n._id,
-                    name: n.name,
-                    status: n.status
-                }))
-            };
-
-            sendSuccess(res, filteredPublication, 200);
+            sendSuccess(res, serializePublication(updated), 200);
         } catch (error) {
             next(error);
         }
@@ -167,21 +140,7 @@ class PublicationController {
                 throw new AppError("NOT_FOUND", 404, "La publicación no existe o ya ha sido moderada");
             }
 
-            const filteredPublication = {
-                _id: moderated._id,
-                user_id: moderated.user_id,
-                text: moderated.text,
-                file: moderated.file,
-                status: moderated.status,
-                created_at: moderated.created_at,
-                necesidades: moderated.necesidades.map((n: any) => ({
-                    _id: n._id,
-                    name: n.name,
-                    status: n.status
-                }))
-            };
-
-            sendSuccess(res, filteredPublication, 200);
+            sendSuccess(res, serializePublication(moderated), 200);
         } catch (error) {
             next(error);
         }
@@ -203,21 +162,7 @@ class PublicationController {
                 throw new AppError("NOT_FOUND", 404, "La publicación no existe o no tienes permiso para subir una imagen");
             }
 
-            const filteredPublication = {
-                _id: updated._id,
-                user_id: updated.user_id,
-                text: updated.text,
-                file: updated.file,
-                status: updated.status,
-                created_at: updated.created_at,
-                necesidades: updated.necesidades.map((n: any) => ({
-                    _id: n._id,
-                    name: n.name,
-                    status: n.status
-                }))
-            };
-
-            sendSuccess(res, filteredPublication, 200);
+            sendSuccess(res, serializePublication(updated), 200);
         } catch (error) {
             next(error);
         }

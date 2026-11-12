@@ -2,6 +2,47 @@ import { Request, Response, NextFunction } from "express";
 import reservationService from "../services/reservation.service";
 import { sendSuccess } from "../utils/response";
 import AppError from "../utils/AppError";
+import { RESERVATION_STATUS, ReservationStatus } from "../types/domain";
+
+// publication_id/donor_id vienen como ObjectId plano salvo que el repositorio
+// los haya poblado (findByIdWithDetails / findByDonor / findByPublicationIds)
+// explícitamente para mostrar en pantalla.
+function serializeReservation(reservation: any) {
+    const donorRef = reservation.donor_id;
+    const pubRef = reservation.publication_id;
+
+    const isDonorPopulated = donorRef && typeof donorRef === "object" && "name" in donorRef;
+    const isPubPopulated = pubRef && typeof pubRef === "object" && "necesidades" in pubRef;
+
+    let needName: string | undefined;
+    let publicationText: string | undefined;
+    let beneficiary: { name: string; nick: string; image: string } | undefined;
+
+    if (isPubPopulated) {
+        publicationText = pubRef.text;
+        const need = pubRef.necesidades.find((n: any) => n._id.toString() === reservation.item_id.toString());
+        needName = need?.name;
+
+        const authorRef = pubRef.user_id;
+        if (authorRef && typeof authorRef === "object" && "name" in authorRef) {
+            beneficiary = { name: authorRef.name, nick: authorRef.nick, image: authorRef.image };
+        }
+    }
+
+    return {
+        _id: reservation._id,
+        publication_id: isPubPopulated ? pubRef._id : pubRef,
+        item_id: reservation.item_id,
+        donor_id: isDonorPopulated ? donorRef._id : donorRef,
+        status: reservation.status,
+        reserved_at: reservation.reserved_at,
+        delivered_at: reservation.delivered_at,
+        donor: isDonorPopulated ? { name: donorRef.name, nick: donorRef.nick, image: donorRef.image } : undefined,
+        need_name: needName,
+        publication_text: publicationText,
+        beneficiary
+    };
+}
 
 class ReservationController {
     async create(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -41,9 +82,15 @@ class ReservationController {
                 sort: { reserved_at: -1 }
             };
 
-            const result = await reservationService.listUserReservations(req.user!.id, options);
+            const requestedStatus = req.query.status;
+            const status: ReservationStatus | undefined =
+                typeof requestedStatus === "string" && (RESERVATION_STATUS as readonly string[]).includes(requestedStatus)
+                    ? (requestedStatus as ReservationStatus)
+                    : undefined;
 
-            sendSuccess(res, result.docs, 200, {
+            const result = await reservationService.listUserReservations(req.user!.id, req.user!.role, options, status);
+
+            sendSuccess(res, result.docs.map(serializeReservation), 200, {
                 page: result.page,
                 limit: result.limit,
                 total: result.totalDocs,
@@ -57,7 +104,7 @@ class ReservationController {
     async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const reservation = await reservationService.getReservationById(req.params.id as string, req.user!.id, req.user!.role);
-            sendSuccess(res, reservation, 200);
+            sendSuccess(res, serializeReservation(reservation), 200);
         } catch (error) {
             next(error);
         }

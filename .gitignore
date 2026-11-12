@@ -2,6 +2,9 @@
 node_modules/
 CLAUDE.md
 
+# Build
+dist/
+
 # Variables de entorno
 .env
 .env.local
@@ -24,3 +27,4 @@ uploads/*
 
 # Scripts
 run-project.bat
+run-frontend.bat

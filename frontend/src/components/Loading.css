@@ -1,0 +1,5 @@
+.loading-state {
+  text-align: center;
+  color: var(--gris-texto);
+  padding: 40px 20px;
+}

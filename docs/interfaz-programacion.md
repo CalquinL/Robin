@@ -54,4 +54,4 @@
 | GET | `/notifications` | `read?,page,limit` | — | 200 | 400 |
 | PATCH | `/notifications/{id}` | `id` | `{read: true}` | 200 | 400, 403, 404 |
 
-Detalle completo (reglas de negocio, casos especiales por rol en documentación Hito 2): `docs/informe-Hito2.pdf`. 
+Detalle completo (reglas de negocio, casos especiales por rol en documentación Hito 2): [informe-Hito2](docs/informe-Hito2.pdf). 

@@ -1,8 +1,11 @@
-import { useState, type SubmitEvent } from 'react'
+import { useState, type ChangeEvent, type SubmitEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { publicationsService } from '../services/publications'
 import { getErrorMessage } from '../utils/errorMessages'
 import './CreatePublicationPage.css'
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024 // 5MB, igual que el límite del backend
 
 interface FieldErrors {
   text?: string
@@ -16,6 +19,9 @@ export function CreatePublicationPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [formError, setFormError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [imageError, setImageError] = useState<string | null>(null)
 
   function updateNeed(index: number, value: string) {
     setNeeds((prev) => prev.map((n, i) => (i === index ? value : n)))
@@ -27,6 +33,33 @@ export function CreatePublicationPage() {
 
   function removeNeed(index: number) {
     setNeeds((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null
+    if (!file) {
+      setImageFile(null)
+      setImagePreview(null)
+      setImageError(null)
+      return
+    }
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setImageError('Formato no permitido. Usa JPG, PNG o GIF')
+      setImageFile(null)
+      setImagePreview(null)
+      return
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      setImageError('La imagen no puede superar los 5MB')
+      setImageFile(null)
+      setImagePreview(null)
+      return
+    }
+
+    setImageError(null)
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
   }
 
   function validate(): { text: string; necesidades: { name: string }[] } | null {
@@ -51,7 +84,18 @@ export function CreatePublicationPage() {
 
     setIsSubmitting(true)
     try {
-      await publicationsService.create(body)
+      const publication = await publicationsService.create(body)
+
+      if (imageFile) {
+        try {
+          await publicationsService.uploadImage(publication._id, imageFile)
+        } catch {
+          // La publicación ya se creó; la imagen es secundaria, no bloquea el flujo.
+          navigate('/', { state: { publicationCreated: true, imageFailed: true } })
+          return
+        }
+      }
+
       navigate('/', { state: { publicationCreated: true } })
     } catch (err) {
       setFormError(getErrorMessage(err))
@@ -105,6 +149,24 @@ export function CreatePublicationPage() {
             <button type="button" className="btn-action btn-secondary" onClick={addNeed}>
               + Agregar necesidad
             </button>
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="pub-image">Imagen (opcional)</label>
+            <input
+              id="pub-image"
+              type="file"
+              accept="image/jpeg,image/png,image/gif"
+              aria-describedby="pub-image-hint"
+              onChange={handleImageChange}
+            />
+            <span id="pub-image-hint" className="field-hint">
+              Formatos permitidos: JPG, PNG o GIF. Tamaño máximo: 5MB.
+            </span>
+            {imageError && <span className="form-error">{imageError}</span>}
+            {imagePreview && (
+              <img src={imagePreview} alt="Vista previa de la imagen seleccionada" className="image-preview" />
+            )}
           </div>
 
           <button type="submit" className="btn-action btn-primary" disabled={isSubmitting}>

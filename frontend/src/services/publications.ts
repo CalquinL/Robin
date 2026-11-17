@@ -40,4 +40,11 @@ export const publicationsService = {
     const { data } = await apiClient.post<Publication>('/publications', body)
     return data
   },
+
+  async uploadImage(id: string, file: File): Promise<Publication> {
+    const formData = new FormData()
+    formData.append('file', file)
+    const { data } = await apiClient.put<Publication>(`/publications/${id}/image`, formData, true)
+    return data
+  },
 }

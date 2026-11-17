@@ -15,6 +15,7 @@ const RECENT_NOTIFICATIONS_LIMIT = 3
 
 interface FeedLocationState {
   publicationCreated?: boolean
+  imageFailed?: boolean
 }
 
 export function FeedPage() {
@@ -36,7 +37,9 @@ export function FeedPage() {
   } = useNotifications({ page: 1, limit: RECENT_NOTIFICATIONS_LIMIT })
   const isBeneficiario = user?.role === 'beneficiario'
   const userInitial = user?.name.charAt(0).toUpperCase() ?? '?'
-  const publicationCreated = Boolean((location.state as FeedLocationState | null)?.publicationCreated)
+  const locationState = location.state as FeedLocationState | null
+  const publicationCreated = Boolean(locationState?.publicationCreated)
+  const imageFailed = Boolean(locationState?.imageFailed)
 
   return (
     <>
@@ -74,6 +77,11 @@ export function FeedPage() {
         {publicationCreated && (
           <p className="form-banner-success">
             Tu publicación fue enviada y está pendiente de aprobación por un administrador.
+          </p>
+        )}
+        {imageFailed && (
+          <p className="form-banner-error">
+            La publicación se creó, pero la imagen no se pudo subir. Puedes intentarlo de nuevo más tarde.
           </p>
         )}
 

@@ -28,3 +28,7 @@ uploads/*
 # Scripts
 run-project.bat
 run-frontend.bat
+tempCodeRunnerFile.bat
+
+# Documentación (se sube a mano, ya existe una carpeta docs en el repo de GitHub)
+/docs/

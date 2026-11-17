@@ -1,0 +1,69 @@
+# "name" fija el prefijo de contenedores/redes/volúmenes (ej. robin-api_mongo_data)
+# sin depender del nombre de la carpeta donde esté clonado el repositorio.
+name: robin-api
+
+services:
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+    # Tag semántico fijo (misma versión de release que el contrato de la API,
+    # sección 4 del CLAUDE.md) en vez de dejar el ":latest" por defecto.
+    image: robin-api-backend:1.0.0
+    env_file:
+      - .env
+    environment:
+      # El nombre del servicio Mongo en esta red reemplaza a host.docker.internal
+      # (usado solo para probar el Dockerfile por separado) y a localhost (el que
+      # usa .env para correr el backend fuera de Docker).
+      MONGODB_URI: mongodb://mongo:27017/robin_db
+    volumes:
+      # Bind mount, no volumen con nombre: así el contenedor ve la misma carpeta
+      # real del host (./uploads/publications, ignorada por git a propósito).
+      # Las imágenes que se suban desde la app quedan ahí, visibles y persistentes
+      # incluso si se reconstruye la imagen o se borra el contenedor.
+      - ./uploads/publications:/app/uploads/publications
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    image: robin-api-frontend:1.0.0
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+  # Servicio de un solo uso: siembra los datos de prueba (npm run db:init).
+  # No se levanta con "docker compose up" (profile "tools"); se corre a mano
+  # con: docker compose run --rm db-init
+  # Usa la etapa "build" del Dockerfile del backend porque esa es la que
+  # todavía tiene tsx (devDependency) para ejecutar db/init.ts.
+  db-init:
+    build:
+      context: .
+      target: build
+    image: robin-api-db-init:1.0.0
+    profiles: ["tools"]
+    command: ["npm", "run", "db:init"]
+    env_file:
+      - .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/robin_db
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo_data:

@@ -253,7 +253,15 @@
 \renewcommand{\arraystretch}{1.35}
 \setlength{\tabcolsep}{4pt}
 \arrayrulecolor{lightgreen}
+% Variantes de color por tipo de contenido, para no repetir siempre el mismo verde:
+%   \tablestyle       verde    (estado, avance, referencia neutra)
+%   \tablestyleorange  naranja  (cambios, decisiones, datos de prueba)
+%   \tablestyleteal    teal     (arquitectura, flujo, herramientas)
+%   \tablestylered     rojo     (errores, fallas, riesgos)
 \newcommand{\tablestyle}{\rowcolors{2}{white}{softgreen}\arrayrulecolor{lightgreen}\small}
+\newcommand{\tablestyleorange}{\rowcolors{2}{white}{robinorange!8}\arrayrulecolor{robinorange!55}\small}
+\newcommand{\tablestyleteal}{\rowcolors{2}{white}{lyrepo!10}\arrayrulecolor{lyrepo!55}\small}
+\newcommand{\tablestylered}{\rowcolors{2}{white}{dangerred!8}\arrayrulecolor{dangerred!50}\small}
 
 % ---------------------------------------------------------------- Listados de código
 \lstdefinestyle{robincode}{
@@ -334,61 +342,58 @@
 % ------------------------------------------------------------------ 1. INTRODUCCIÓN
 \section{Introducción}
 
-La ayuda solidaria entre personas naturales suele depender de intermediarios institucionales o de campañas de donación en dinero, que exponen al donante al riesgo de campañas falsas y no permiten verificar que la ayuda llegue en la forma concreta que la otra persona necesita. Robin se propuso como alternativa: una wishlist de bienes, no de dinero, donde un beneficiario publica su historia junto con una lista de necesidades puntuales, un administrador verifica la publicación antes de que sea visible, y un donante reserva y entrega directamente uno de esos bienes.
+La ayuda solidaria entre personas naturales suele depender de intermediarios institucionales o de campañas de donación en dinero, que exponen al donante a campañas falsas y no permiten verificar que la ayuda llegue en la forma concreta que la otra persona necesita. Robin se propuso como alternativa: una wishlist de bienes, no de dinero, donde un beneficiario publica su historia y una lista de necesidades puntuales, un administrador verifica la publicación antes de que sea visible, y un donante reserva y entrega directamente uno de esos bienes.
 
-Esa promesa se construyó de punta a punta. El Hito 2 entregó el backend: una API REST de 24 endpoints, organizada en capas (\code{routes} $\rightarrow$ \code{middlewares}/\code{controllers} $\rightarrow$ \code{services} $\rightarrow$ \code{repositories} $\rightarrow$ \code{models}), con reserva atómica de necesidades y confirmación manual de entrega (sin evidencia fotográfica). Este hito integró el frontend en React sobre ese mismo backend: diez pantallas, autenticación por rol, y el flujo principal completo —iniciar sesión como donante, ver el feed, abrir el detalle de una publicación, reservar una necesidad, verla en "Mis donaciones" y comprobar que el dato sigue ahí tras recargar la página— funcionando contra el servicio real, no contra datos simulados. Sobre esa base se agregaron tres funcionalidades que no estaban previstas en los hitos anteriores, pero que resultaron necesarias al construir la interfaz: notificaciones consultables desde la pantalla, la posibilidad de guardar una publicación para verla después, y búsqueda de publicaciones por texto.
+Esa promesa se construyó de punta a punta. El Hito 2 entregó el backend —una API REST de 24 endpoints organizada en capas, con reserva atómica de necesidades y confirmación manual de entrega—. Este hito integró el frontend en React sobre ese mismo backend, con el flujo principal completo (iniciar sesión, ver el feed, abrir el detalle, reservar una necesidad, verla en "Mis donaciones" y comprobar que persiste tras recargar) funcionando contra el servicio real. Sobre esa base se agregaron tres funcionalidades que no estaban previstas en los hitos anteriores, pero que resultaron necesarias al construir la interfaz: notificaciones, publicaciones guardadas y búsqueda de publicaciones por texto.
 
-El alcance entregado incluye, entonces, el producto completo descrito arriba con sus tres roles (\code{beneficiario}, \code{donante}, \code{admin}), cada uno con permisos verificados en el servidor y no solo ocultos en la interfaz. Quedó fuera de este hito, y se declara explícitamente en la sección~\ref{sec:limitaciones}: el despliegue en contenedores, las pruebas automatizadas, y todo lo que ya estaba fuera de alcance desde el Hito 2 (comisión de afiliado, certificado de donación, plan de empresa, estadísticas globales).
+El alcance entregado cubre el producto completo con sus tres roles (\code{beneficiario}, \code{donante}, \code{admin}), cada uno con permisos verificados en el servidor y no solo ocultos en la interfaz, además de un despliegue containerizado con Docker (sección~\ref{sec:despliegue}). Quedó fuera, y se declara en la sección~\ref{sec:limitaciones}, lo que ya estaba fuera de alcance desde el Hito 2 (comisión de afiliado, certificado de donación, plan de empresa). Las decisiones ya justificadas en el Hito 2 no se repiten en este informe (ver \ruta{docs/informe-Hito2.md}), salvo cuando cambiaron.
 
-El resto de este documento sigue este orden: la sección~2 contrasta lo prometido en el Hito 1, lo comprometido en el Hito 2 y lo efectivamente entregado aquí; la sección~3 documenta la arquitectura final con diagramas verificados contra el código real; la sección~4 recoge cómo evolucionaron las decisiones del equipo, incluyendo lo que salió mal y cómo se corrigió; la sección~5 cubre validación, errores y los tres estados de carga de cada pantalla; la sección~6 es el manual de instalación y uso; la sección~7 declara las limitaciones conocidas del producto; y la sección~8 cierra con la conclusión. Los anexos documentan el uso de inteligencia artificial durante el desarrollo y el tratamiento de datos personales del sistema.
-
-\vspace{6pt}
-\begin{tcbraster}[raster columns=4,raster equal height,raster column skip=7pt]
-  \kpi{24}{endpoints REST}
-  \kpi{3}{roles de usuario}
-  \kpi{10}{pantallas del frontend}
-  \kpi{0}{pruebas automatizadas}
-\end{tcbraster}
-
-El alcance entregado y lo que quedó fuera se detalla en la sección~\ref{sec:limitaciones} (Limitaciones declaradas); este documento no repite las decisiones ya justificadas en el Hito 2 (sección~2 de \ruta{docs/informe-Hito2.md}), salvo cuando cambiaron.
+El documento sigue el orden de la rúbrica: estado real del producto, arquitectura final, evolución de decisiones, validación y errores, manual de instalación, limitaciones declaradas, conclusión, y los anexos de uso de inteligencia artificial y de datos personales.
 
 % ------------------------------------------------------------------ 2. ESTADO REAL DEL PRODUCTO
 \section{Estado real del producto}
 
 \subsection{Prometido, comprometido y entregado}
 
-{\tablestyle
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{4.1cm}>{\raggedright\arraybackslash}p{4.1cm}>{\centering\arraybackslash}p{2.3cm}@{}}
-\caption{Trazabilidad Hito 1 → Hito 2 → Hito 3}\\
-\rowcolor{mayorgreen}\hc{Elemento} & \hc{Prometido (Hito 1)} & \hc{Comprometido (Hito 2)} & \hc{Entregado (Hito 3)}\\
-\endfirsthead
-\rowcolor{mayorgreen}\hc{Elemento} & \hc{Prometido (Hito 1)} & \hc{Comprometido (Hito 2)} & \hc{Entregado (Hito 3)}\\
-\endhead
-Wishlist de bienes (disponible $\rightarrow$ reservado $\rightarrow$ entregado) & Sí, como alternativa a campañas monetarias & API REST completa con reserva atómica & \ok{Completo}\\
-Moderación previa a publicación & Rol moderador & Rol \code{admin}, {\scriptsize\code{PATCH /publications/\{id\}/status}} & \ok{Completo}\\
-Confirmación de entrega & Fotográfica & Manual, ambas partes (marcado \code{[definir]}) & \ok{Completo} (manual, basta una de las dos partes; ver sección~\ref{sec:evolucion})\\
-Frontend (React) & Mockup estático (Hito 1) & Fuera de alcance del Hito 2 & \ok{Completo} — flujo principal de punta a punta funcionando\\
-Notificaciones & Contempladas en el modelo de datos & Modelo y endpoints definidos en la tabla de la API, sin verificar que estuvieran implementados & \ok{Completo} — \code{GET}/\code{PATCH /notifications} implementados y conectados a una pantalla propia durante este hito\\
-Publicaciones guardadas & No prevista & No prevista & \ok{Completo} — agregada como necesidad real del frontend\\
-Búsqueda en el feed & No prevista & No prevista & \ok{Completo} — \code{?search=} en \code{GET /publications}\\
-Plan de empresa / comisión de afiliado & Previsto como modelo de ingresos & Fuera de alcance técnico (Ley 21.440) & \errs{No implementado} — fuera de alcance (sección~\ref{sec:limitaciones})\\
-Certificado de donación & Previsto & Eliminado del alcance & \errs{No implementado}\\
-Despliegue en contenedores & \porcompletar{confirmar si se prometió en Hito 1} & No abordado & \errs{No implementado} (sección~\ref{sec:despliegue})\\
-Pruebas automatizadas & \porcompletar{confirmar} & No abordado & \errs{No implementado} — verificación manual (sección~2.4)\\
-\end{longtable}}
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}
+  \node[state,fill=lightgreen!60,text=mayordark,minimum width=4.6cm] (h1) at (0,0) {Hito 1\\[2pt]\scriptsize Propuesta: wishlist de bienes\\mockup estático};
+  \node[state,fill=lyservice,minimum width=4.6cm] (h2) at (6.3,0) {Hito 2\\[2pt]\scriptsize Backend REST completo\\24 endpoints, capas};
+  \node[state,fill=mayorgreen,minimum width=4.6cm] (h3) at (12.6,0) {Hito 3\\[2pt]\scriptsize Frontend integrado\\flujo de punta a punta};
+  \draw[arr] (h1.east) -- (h2.west);
+  \draw[arr] (h2.east) -- (h3.west);
+\end{tikzpicture}}
+\caption{Evolución del proyecto entre hitos.}
+\end{figure}
 
-\pendiente{Esta tabla se armó con lo que \ruta{docs/informe-Hito2.md} documenta sobre el Hito 1; conviene cruzarla contra el documento original del Hito 1 para las celdas marcadas.}
+{\tablestyle
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{7.3cm}>{\centering\arraybackslash}p{2.6cm}@{}}
+\caption{Trazabilidad Hito 1 → Hito 3 (resumen)}\\
+\rowcolor{mayorgreen}\hc{Elemento} & \hc{De lo prometido a lo entregado} & \hc{Estado}\\
+\endfirsthead
+\rowcolor{mayorgreen}\hc{Elemento} & \hc{De lo prometido a lo entregado} & \hc{Estado}\\
+\endhead
+Wishlist de bienes & Prevista desde el Hito 1 como alternativa a campañas monetarias; implementada con reserva atómica (disponible $\rightarrow$ reservado $\rightarrow$ entregado) & \ok{Completo}\\
+Moderación previa & Rol "moderador" del Hito 1, implementado como rol \code{admin} ({\scriptsize\code{PATCH /publications/\{id\}/status}}) & \ok{Completo}\\
+Confirmación de entrega & Se planteó fotográfica en el Hito 1; quedó manual, por cualquiera de las dos partes (sección~\ref{sec:evolucion}) & \ok{Completo}\\
+Frontend (React) & Mockup estático en el Hito 1, fuera de alcance en el Hito 2; integrado completo en este hito, flujo principal de punta a punta & \ok{Completo}\\
+Notificaciones, guardados y búsqueda & Notificaciones estaban en el modelo de datos desde el Hito 1 sin verificar implementación; guardados y búsqueda no estaban previstos, surgieron al construir la interfaz & \ok{Completo}\\
+Modelo de ingresos (plan de empresa, certificado, comisión de afiliado) & Previsto en el Hito 1; diferido desde el Hito 2 por depender de una entidad donataria registrada (Ley 21.440) & \errs{No implementado}\\
+Despliegue en contenedores & \porcompletar{confirmar qué prometía exactamente el Hito 1 sobre esto} & \textcolor{robinorange}{\bfseries Parcial} (secciones~\ref{sec:despliegue} y~\ref{sec:limitaciones})\\
+\end{longtable}}
 
 \subsection{Flujo principal entregado}
 
 Criterio de aceptación (definido en la sección de frontend de \code{CLAUDE.md}): iniciar sesión como donante, ver el feed, abrir el detalle, reservar una necesidad, verla en "Mis donaciones", recargar la página y comprobar que el dato persiste. Se verificó manualmente que las seis etapas funcionan de punta a punta sobre el backend y el frontend reales.
 
-{\tablestyle
+{\tablestyleteal
 \begin{longtable}{@{}>{\centering\arraybackslash}p{0.6cm}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{5.3cm}@{}}
 \caption{Flujo principal, paso a paso}\\
-\rowcolor{mayorgreen}\hc{\#} & \hc{Paso} & \hc{Pantalla} & \hc{Endpoint(s) invocado(s)}\\
+\rowcolor{lyrepo}\hc{\#} & \hc{Paso} & \hc{Pantalla} & \hc{Endpoint(s) invocado(s)}\\
 \endfirsthead
-\rowcolor{mayorgreen}\hc{\#} & \hc{Paso} & \hc{Pantalla} & \hc{Endpoint(s) invocado(s)}\\
+\rowcolor{lyrepo}\hc{\#} & \hc{Paso} & \hc{Pantalla} & \hc{Endpoint(s) invocado(s)}\\
 \endhead
 1 & Iniciar sesión como donante & \code{LoginPage} & \POST\ \route{/users/login}{}\\
 2 & Ver el feed de publicaciones aprobadas & \code{FeedPage} & \GET\ \route{/publications}{} , \GET\ \route{/notifications}{} (panel "Novedades")\\
@@ -402,12 +407,12 @@ Criterio de aceptación (definido en la sección de frontend de \code{CLAUDE.md}
 
 \subsection{Roles y permisos}
 
-{\tablestyle
+{\tablestyleorange
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{10.8cm}@{}}
 \caption{Qué puede hacer cada rol en el producto entregado}\\
-\rowcolor{mayorgreen}\hc{Rol} & \hc{Puede}\\
+\rowcolor{robinorange}\hc{Rol} & \hc{Puede}\\
 \endfirsthead
-\rowcolor{mayorgreen}\hc{Rol} & \hc{Puede}\\
+\rowcolor{robinorange}\hc{Rol} & \hc{Puede}\\
 \endhead
 \code{beneficiario} & Feed, detalle, crear y editar su publicación, ver sus publicaciones guardadas, notificaciones, perfil, confirmar la entrega de una reserva sobre su propia publicación.\\
 \code{donante} & Feed, detalle y reserva de necesidades, "Mis donaciones" (cancelar o confirmar entrega), guardar publicaciones, notificaciones, perfil.\\
@@ -415,15 +420,6 @@ Criterio de aceptación (definido en la sección de frontend de \code{CLAUDE.md}
 \end{longtable}}
 
 La autoridad real está en el servidor (middleware \code{roles.ts} y chequeos de propiedad en los services); el frontend solo oculta acciones no permitidas por experiencia de usuario (\code{RoleRoute}), lo que \textbf{no} sustituye la verificación del backend.
-
-\subsection{Qué se probó y cómo}
-
-No existen pruebas automatizadas en el repositorio: el script \code{test} del backend es un marcador que falla (\code{"echo ... \&\& exit 1"}) y el frontend no tiene Vitest, Jest ni Testing Library instalados. Toda la verificación de este hito fue manual:
-\begin{itemize}
-\item \textbf{Backend:} peticiones reales con \code{curl} contra el servidor corriendo, para cada endpoint y para los casos de error relevantes (403, 404, 409, 415), incluyendo los tres hallazgos de la sección~\ref{sec:evolucion}.
-\item \textbf{Frontend:} uso real en el navegador de los tres roles contra el backend real, incluyendo los tres estados (carga, vacío, error) de cada pantalla.
-\item \textbf{Capas:} \code{grep} de separación de responsabilidades (sección~\ref{sec:verificacion}), sin resultados.
-\end{itemize}
 
 % ------------------------------------------------------------------ 3. ARQUITECTURA FINAL
 \section{Arquitectura final}
@@ -524,52 +520,59 @@ Ejemplo: reservar una necesidad desde el detalle de una publicación.
 \caption{Recorrido completo de \code{POST /api/v1/reservations}, desde el clic hasta la pantalla.}
 \end{figure}
 
-{\tablestyle
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}p{9.7cm}@{}}
-\caption{Detalle del recorrido de punta a punta}\\
-\rowcolor{mayorgreen}\hc{Paso} & \hc{Qué ocurre}\\
-\endfirsthead
-\rowcolor{mayorgreen}\hc{Paso} & \hc{Qué ocurre}\\
-\endhead
-Componente & \code{PublicationDetailPage.handleReserve(itemId)} deshabilita el botón y llama al service.\\
-Service (frontend) & \code{reservationsService.create(publicationId, itemId)} construye el cuerpo.\\
-\code{apiClient} & Agrega \code{Authorization: Bearer <token>}, hace el \code{fetch}, interpreta el sobre de respuesta.\\
-Proxy de Vite & En desarrollo, \code{/api} se reenvía a \code{http://localhost:3900} (sin esto, el navegador vería un origen distinto).\\
-Routes (backend) & \code{auth} valida el JWT; \code{roles(["donante"])} exige ese rol; si pasa, llama al controller.\\
-Controller & Valida que \code{publication\_id} e \code{item\_id} vengan en el cuerpo (400 si no).\\
-Service (backend) & Pide la actualización atómica al repositorio de publicaciones.\\
-Repository & \code{findOneAndUpdate} condicionado (\code{status:"aprobada"} y necesidad \code{"disponible"}); si no hay coincidencia, no se crea nada y el service responde 409.\\
-Éxito & Se crea el documento de \code{Reservation}, se notifica al beneficiario y se responde \code{201} con el sobre estándar.\\
-UI & El componente recibe la reserva, muestra el banner de éxito y recarga el detalle: la necesidad pasa a mostrarse como "Reservado".\\
-\end{longtable}}
+La figura muestra la ruta completa; lo que no se ve ahí es la condición exacta de cada paso clave:
+\begin{itemize}
+\item \textbf{Middleware de rol:} \code{roles(["donante"])} corta la petición con 403 antes de llegar al controller si el token no es de un donante.
+\item \textbf{Repository (paso atómico):} \code{findOneAndUpdate} solo marca la necesidad \code{"reservado"} si la publicación está \code{"aprobada"} y la necesidad sigue \code{"disponible"}; si no hay coincidencia, no se crea nada y el service responde \code{409}.
+\item \textbf{Efecto colateral del éxito:} además de crear la \code{Reservation}, el service notifica al beneficiario dueño de la publicación.
+\end{itemize}
 
 \subsection{Contrato de la API final}
 
-La tabla completa de endpoints, con parámetros, cuerpos y códigos de error, es la de \ruta{docs/informe-Hito2.md} (sección 3), ya corregida para coincidir con el código real (24 endpoints, no 19 como se había estimado). Aquí solo se resume lo que cambió desde ese cierre:
-
-{\tablestyle
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{9.6cm}@{}}
-\caption{Cambios al contrato de la API desde el Hito 2}\\
-\rowcolor{mayorgreen}\hc{Qué} & \hc{Detalle}\\
-\endfirsthead
-\rowcolor{mayorgreen}\hc{Qué} & \hc{Detalle}\\
-\endhead
-Recursos nuevos & \code{/users/saved-publications} (3 endpoints) y \code{/notifications} (2 endpoints); ambos compatibles (versión menor, misma ruta \code{/api/v1}).\\
-Parámetro nuevo & \code{search} opcional en \code{GET /publications}, busca por texto de la historia, nombre de necesidad o nombre del autor.\\
-Cambio de contraseña & \code{PATCH /users/update} acepta opcionalmente \code{current\_password} + \code{new\_password}, mismo endpoint, sin ruta nueva.\\
-Corrección de bug & \code{GET /users/profile/:id} ignoraba el \code{:id} y siempre devolvía el perfil propio; ahora respeta el parámetro.\\
-Corrección de bug & \code{DELETE /publications/\{id\}} no verificaba reservas activas; ahora responde \code{409} si hay alguna \code{reservado}.\\
-Ruta eliminada & \code{GET /users/list/\{page\}} (paginación por path, duplicada e inconsistente con el resto de la API).\\
-\end{longtable}}
-
-\subsection{Modelo de datos final}
-
-Sin cambios de fondo respecto del Hito 2 (enfoque mixto: necesidades embebidas, el resto referenciado). Se agregó \code{saved\_publications} (arreglo de \code{ObjectId}) al esquema de \code{User}, para sostener "Guardados". El diagrama entidad-relación completo y los campos de cada colección están en \ruta{docs/informe-Hito2.md} (sección 5.1), ya actualizados.
+La tabla completa de endpoints, con parámetros, cuerpos y códigos de error, es la de \ruta{docs/informe-Hito2.md} (sección 3), ya corregida para coincidir con el código real (24 endpoints, no 19 como se había estimado). Todo lo que cambió en ese contrato desde el cierre del Hito 2 —recursos nuevos, un parámetro nuevo y tres correcciones de bugs— se detalla junto con el resto de las decisiones del hito en la Tabla~\ref{tab:cambios-h2h3} (sección~\ref{sec:evolucion}), para no repetirlo dos veces.
 
 \subsection{Decisión de despliegue}
 \label{sec:despliegue}
 
-\pendiente{No hay contenedores implementados (ni \code{Dockerfile} ni \code{docker-compose.yml} en el repositorio). Falta decidir y documentar aquí la estrategia de despliegue, con una alternativa comparada y su desventaja asumida, antes de cerrar esta sección.}
+El producto se empaquetó en tres contenedores orquestados con \code{docker-compose.yml}: \code{mongo} (base de datos), \code{backend} (API, build multi-etapa que compila TypeScript y corre solo el resultado) y \code{frontend} (el build de React servido por nginx). Los tres comparten la red interna que Compose crea automáticamente; nada se expone al host salvo el puerto del frontend (\code{8080}).
+
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}
+  \node[state,fill=lyapi,minimum width=2.6cm] (nav) at (-4.6,0) {Navegador};
+  \draw[dashed,rounded corners=6pt,draw=lyrepo,line width=0.9pt] (-2.0,-1.3) rectangle (7.9,1.3);
+  \node[font=\sffamily\scriptsize\bfseries,color=lyrepo] at (2.95,1.55) {red interna de docker-compose};
+  \node[state,fill=mayorgreen,minimum width=2.8cm] (fe) at (0,0) {frontend\\[-2pt]{\scriptsize nginx + build}};
+  \node[state,fill=lyservice,minimum width=2.8cm] (be) at (3.4,0) {backend\\[-2pt]{\scriptsize Node + Express}};
+  \node[cylinder,shape border rotate=90,aspect=0.22,fill=lydb,draw=mayorgreen,line width=0.8pt,text=white,
+        font=\sffamily\bfseries\scriptsize,align=center,minimum width=2.2cm,minimum height=1.1cm] (mg) at (6.6,0) {mongo};
+  \draw[arr] (nav.east) -- node[above,font=\sffamily\scriptsize]{:8080} (fe.west);
+  \draw[arr] (fe.east) -- node[above,font=\sffamily\scriptsize]{\code{/api}, \code{/uploads}} (be.west);
+  \draw[arr] (be.east) -- node[above,font=\sffamily\scriptsize]{:27017} (mg.west);
+  \node[font=\sffamily\scriptsize,align=center,text width=2.8cm] at (0,-1.9) {sin puerto propio publicado};
+  \node[font=\sffamily\scriptsize,align=center,text width=3.4cm] at (3.4,-1.9) {bind mount: \code{./uploads/publications}};
+  \node[font=\sffamily\scriptsize,align=center,text width=3cm] at (6.6,-1.9) {volumen \code{mongo\_data} (persistente)};
+\end{tikzpicture}}
+\caption{Los tres contenedores del despliegue, su red interna y dónde persisten los datos.}
+\end{figure}
+
+{\tablestyleteal
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{5.6cm}>{\raggedright\arraybackslash}p{5.3cm}@{}}
+\caption{Alternativa comparada: nginx como reverse proxy vs. exponer el backend directo}\\
+\rowcolor{lyrepo}\hc{Aspecto} & \hc{nginx como reverse proxy (elegido)} & \hc{Backend expuesto directo + CORS abierto}\\
+\endfirsthead
+\rowcolor{lyrepo}\hc{Aspecto} & \hc{nginx como reverse proxy (elegido)} & \hc{Backend expuesto directo + CORS abierto}\\
+\endhead
+\code{VITE_API_URL} & Se mantiene \code{/api/v1} (ruta relativa, misma regla del resto del proyecto) sin tocar código del frontend & Habría que cambiarla a una URL absoluta del backend, contra la regla de no escribir URLs absolutas en el código\\
+Exposición al host & Solo el puerto del frontend (\code{8080}); el backend no es alcanzable desde fuera de la red interna & El backend quedaría publicado directo al host, mayor superficie de ataque (contra el principio de mínimo privilegio, sección 18 del \code{CLAUDE.md})\\
+CORS & Innecesario: para el navegador, frontend y backend quedan en el mismo origen (\code{localhost:8080}) & Exige configurar \code{CORS\_ORIGIN} y mantenerlo sincronizado con el puerto publicado\\
+Desventaja asumida & Una capa y un archivo de configuración más (\code{nginx.conf}) que mantener; además obligó a resolver en caliente un problema real de orden de arranque/DNS (detallado en \ruta{docs/bitacora.md}) & Más simple de configurar, pero menos seguro y acoplado a un cambio de código del frontend\\
+\end{longtable}}
+
+La imagen de Mongo es la oficial (\code{mongo:7}, 1.19\,GB, verificado con \code{docker images}): no existe una variante Alpine mantenida por MongoDB Inc. (descontinuada por incompatibilidad entre sus componentes y la libc de Alpine) ni una alternativa más liviana con versiones fijas y confiables (\code{bitnami/mongodb} dejó de publicar tags de versión en su plan gratuito). El backend usa \code{node:25-slim} en vez de Alpine porque \code{bcrypt} compila un binding nativo al instalarse y no se verificó su compatibilidad con la libc de Alpine; el frontend, sin dependencias nativas, sí usa \code{node:25-alpine} para compilar y \code{nginx:alpine} para servir. Ambas imágenes de la aplicación se armaron con build multi-etapa (compilan con las dependencias de desarrollo y copian solo el resultado final), quedando el backend en 361\,MB y el frontend en 94.5\,MB. Como \code{npm run db:init} depende de \code{tsx} (una dependencia de desarrollo que la imagen de producción no lleva), los datos de prueba se siembran con un servicio aparte, \code{db-init}, que usa la etapa intermedia del mismo \code{Dockerfile} y solo se ejecuta a pedido (\code{docker compose run --rm db-init}), nunca junto al resto del stack.
+
+Se verificó en caliente, con el stack completo levantado (\code{docker compose up --build}): inicio de sesión real a través del proxy, lectura del feed con el token recién emitido, una imagen de publicación servida por el mismo proxy, y persistencia de los datos tras reiniciar los contenedores de Mongo y del backend (\code{docker compose restart}). Falta probar esta misma secuencia en una máquina físicamente distinta, sin Docker Desktop, Node ni MongoDB preinstalados (declarado en la sección~\ref{sec:limitaciones}).
 
 % ------------------------------------------------------------------ 4. EVOLUCIÓN DE DECISIONES
 \section{Evolución de decisiones y bitácora}
@@ -579,33 +582,34 @@ Sin cambios de fondo respecto del Hito 2 (enfoque mixto: necesidades embebidas, 
 
 Los cambios ya justificados en el Hito 2 (confirmación de entrega manual en vez de foto, capa de \code{repositories}, contrato \code{/api/v1}, reducción de alcance, plan de empresa y Ley 21.440 diferidos) se mantienen sin modificación y no se repiten aquí; ver la sección de cambios de \ruta{docs/informe-Hito2.md}. Lo que cambió \textbf{entre el cierre del Hito 2 y este informe} es lo siguiente:
 
-{\tablestyle
+{\tablestyleorange
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}p{5.2cm}>{\raggedright\arraybackslash}p{4.3cm}@{}}
-\caption{Cambios entre el Hito 2 y este informe}\\
-\rowcolor{mayorgreen}\hc{Qué cambió} & \hc{Motivo} & \hc{Impacto}\\
+\caption{Cambios entre el Hito 2 y este informe (incluye el contrato de la API)}
+\label{tab:cambios-h2h3}\\
+\rowcolor{robinorange}\hc{Qué cambió} & \hc{Motivo} & \hc{Impacto}\\
 \endfirsthead
-\rowcolor{mayorgreen}\hc{Qué cambió} & \hc{Motivo} & \hc{Impacto}\\
+\rowcolor{robinorange}\hc{Qué cambió} & \hc{Motivo} & \hc{Impacto}\\
 \endhead
-Frontend construido completo & Objetivo explícito del Hito 3: flujo principal de punta a punta & Backend sin cambios de contrato en esta parte\\
-Guardados y Notificaciones wireadas al frontend & Necesidades reales detectadas al construir las pantallas & 5 endpoints nuevos, compatibles\\
-Búsqueda en el feed & El buscador del navbar era decorativo desde el mockup del Hito 1 & 1 parámetro opcional nuevo\\
-\code{GET /users/profile/:id} corregido & Encontrado al redactar este informe: ignoraba el \code{:id} & Ahora cualquiera puede ver el perfil público de otro usuario, como pedía el diseño original\\
-\code{DELETE /publications/\{id\}} corregido & Encontrado al redactar este informe: no chequeaba reservas activas & Ahora da \code{409} en vez de borrar con reservas en curso\\
-\code{CORS\_ORIGIN} corregido & \code{app.use(cors())} ignoraba la variable de entorno & Ahora el origen es configurable de verdad\\
-\code{db/init.ts} reescrito & El script original (\code{db/init.js}) estaba roto desde la migración a TypeScript; no había script \code{npm} que lo ejecutara & Ahora \code{npm run db:init} funciona y además crea datos de prueba (beneficiario, donante, publicación aprobada)\\
-Documentación reconciliada & \ruta{docs/endpoints.md}, \ruta{informe-tecnico.md}, \ruta{modelo-datos.md} y \ruta{persistencia-credenciales.md} describían un contrato viejo (rutas \code{/auth/*} inexistentes, sin Notificaciones/Guardados) & Los cuatro documentos se actualizaron contra el código real\\
+Frontend construido completo & Objetivo explícito del Hito 3 & Flujo principal de punta a punta; sin cambios de contrato por esta parte\\
+Guardados y Notificaciones (5 endpoints nuevos) & Necesidades reales detectadas al construir las pantallas & Cambio compatible, misma ruta \code{/api/v1}\\
+Búsqueda en el feed (\code{?search=}) & El buscador del navbar era decorativo desde el mockup del Hito 1 & 1 parámetro opcional nuevo\\
+Cambio de contraseña en \code{PATCH /users/update} & Pedido explícito, reutilizando el mismo endpoint & Sin ruta nueva\\
+3 bugs de backend corregidos: \code{GET /users/profile/:id}, \code{DELETE /publications/\{id\}}, \code{CORS\_ORIGIN} & Encontrados al redactar este informe, contrastando el código contra la documentación & El perfil respeta el \code{:id}, borrar da \code{409} con reservas activas, y el origen CORS ya es configurable\\
+Ruta \code{/users/list/\{page\}} eliminada & Paginación por path, duplicada e inconsistente con el resto de la API & Limpieza; nada del frontend la usaba\\
+\code{db/init.ts} reescrito + datos de prueba & El script original estaba roto desde la migración a TypeScript; no había script \code{npm} que lo ejecutara & \code{npm run db:init} funciona y crea cuentas de prueba (beneficiario, donante, publicación aprobada)\\
+Documentación reconciliada (4 documentos) & Describían un contrato viejo (rutas \code{/auth/*} inexistentes, sin Notificaciones/Guardados) & Actualizados contra el código real\\
 \end{longtable}}
 
 \subsection{Bitácora de decisiones (resumen)}
 
 Versión completa, con fecha y detalle de cada entrada, en \ruta{docs/bitacora.md}. Resumen de las decisiones más relevantes para la arquitectura final:
 
-{\tablestyle
+{\tablestyleteal
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.4cm}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{4.7cm}@{}}
 \caption{Bitácora de decisiones (resumen)}\\
-\rowcolor{mayorgreen}\hc{Decisión} & \hc{Motivo} & \hc{Qué salió mal / cómo se resolvió}\\
+\rowcolor{lyrepo}\hc{Decisión} & \hc{Motivo} & \hc{Qué salió mal / cómo se resolvió}\\
 \endfirsthead
-\rowcolor{mayorgreen}\hc{Decisión} & \hc{Motivo} & \hc{Qué salió mal / cómo se resolvió}\\
+\rowcolor{lyrepo}\hc{Decisión} & \hc{Motivo} & \hc{Qué salió mal / cómo se resolvió}\\
 \endhead
 Usar el código real como fuente de verdad, no \code{CLAUDE.md} ni documentos previos & El backend tenía cambios sin documentar y los documentos estaban desactualizados & Se detectaron varias rutas inexistentes (\code{/auth/*}) antes de construir el frontend sobre ellas\\
 Mass-assignment en \code{PATCH /users/update} & Se encontró que cualquier campo del cuerpo se guardaba sin filtrar & Cualquiera podía autoasignarse \code{role: "admin"}; se corrigió con lista blanca de campos\\
@@ -620,30 +624,37 @@ Búsqueda con texto de usuario en \code{\$regex} & Riesgo de inyección de regex
 
 \subsection{Qué se valida y dónde}
 
-{\tablestyle
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.0cm}>{\raggedright\arraybackslash}p{5.0cm}>{\raggedright\arraybackslash}p{4.9cm}@{}}
-\caption{Validación en cliente y en servidor}\\
-\rowcolor{mayorgreen}\hc{Capa} & \hc{Qué valida} & \hc{Ejemplo}\\
-\endfirsthead
-\rowcolor{mayorgreen}\hc{Capa} & \hc{Qué valida} & \hc{Ejemplo}\\
-\endhead
-Cliente (formularios) & Campos obligatorios, largos máximos, formato de correo, al menos una necesidad al crear publicación & \code{maxLength} en inputs, validación antes de enviar\\
-Cliente (\code{apiClient}) & Interpreta el sobre, traduce \code{401} a cierre de sesión & Redirección a \code{/login} con aviso\\
-Servidor (controllers) & Presencia de campos obligatorios en el cuerpo & \code{AppError("VALIDATION\_ERROR", 400, ...)}\\
-Servidor (services) & Reglas de negocio, propiedad del recurso, transiciones de estado & p. ej. solo el donante cancela su reserva\\
-Servidor (errorHandler) & Traduce errores de Mongoose (\code{ValidationError}, \code{CastError}, código 11000) & 400 / 400 / 409\\
-\end{longtable}}
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}
+  \node[state,fill=lyrepo,minimum width=3.4cm] (f) at (0,0) {Formulario};
+  \node[state,fill=lyrepo,minimum width=4.6cm,right=0.5cm of f] (c) {Cliente valida\\[-2pt]{\scriptsize obligatorios, largo, formato de correo}};
+  \node[state,fill=robinorange,minimum width=5.6cm,right=0.5cm of c] (s) {Servidor valida\\[-2pt]{\scriptsize controller $\rightarrow$ service $\rightarrow$ errorHandler}};
+  \node[state,fill=mayorgreen,minimum width=2.6cm,right=0.5cm of s] (ok) {200 / 201};
+  \draw[arr] (f) -- (c);
+  \draw[arr] (c) -- (s);
+  \draw[arr] (s) -- (ok);
+  \draw[arr,color=dangerred] (s.south) to[out=-100,in=-80,looseness=1.1] node[below,font=\sffamily\scriptsize,color=dangerred,align=center]{400/403/404/409\\si alguna regla falla} (c.south);
+\end{tikzpicture}}
+\caption{El cliente valida primero, por experiencia de usuario; el servidor vuelve a validar siempre, porque es la única autoridad real.}
+\end{figure}
 
-El cliente \textbf{nunca} es la autoridad: toda regla validada en el frontend se vuelve a validar en el servidor.
+\begin{itemize}
+\item \textbf{Cliente:} \code{maxLength} en los campos, formato de correo y "al menos una necesidad" antes de enviar el formulario de crear publicación.
+\item \textbf{Servidor (controller):} presencia de campos obligatorios, lanzando un \code{AppError} de código 400.
+\item \textbf{Servidor (service):} reglas de negocio y propiedad del recurso (p. ej. solo el donante cancela su propia reserva).
+\item \textbf{Servidor (\code{errorHandler}):} traduce errores de Mongoose (\code{ValidationError} y \code{CastError} a 400, clave duplicada a 409) para que el cliente nunca vea un mensaje técnico.
+\end{itemize}
 
 \subsection{Código de error de la API → mensaje al usuario}
 
-{\tablestyle
+{\tablestylered
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.4cm}>{\raggedright\arraybackslash}p{9.2cm}@{}}
 \caption{Traducción de errores de la API a lenguaje de usuario}\\
-\rowcolor{mayorgreen}\hc{Código de la API} & \hc{Mensaje al usuario}\\
+\rowcolor{dangerred}\hc{Código de la API} & \hc{Mensaje al usuario}\\
 \endfirsthead
-\rowcolor{mayorgreen}\hc{Código de la API} & \hc{Mensaje al usuario}\\
+\rowcolor{dangerred}\hc{Código de la API} & \hc{Mensaje al usuario}\\
 \endhead
 \code{VALIDATION\_ERROR} & "Revisa los campos marcados" (más el detalle por campo)\\
 \code{UNAUTHENTICATED} / sesión expirada & "Tu sesión expiró. Inicia sesión de nuevo"\\
@@ -656,23 +667,58 @@ Sin conexión con el servidor & "No pudimos conectar. Revisa tu conexión y rein
 
 \subsection{Estados de carga, vacío y error}
 
-Todas las pantallas que cargan datos (\code{FeedPage}, \code{PublicationDetailPage}, \code{MyDonationsPage}, \code{AdminReviewPage}, \code{NotificationsPage}, \code{ProfilePage}) implementan los tres estados mediante los componentes compartidos \code{Loading}, \code{EmptyState} y \code{ErrorMessage} (este último con botón de reintento). Ninguna pantalla puede quedar en blanco.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+  \node[state,fill=lyrepo,minimum width=3cm] (mount) at (0,0) {Pantalla\\[-2pt]{\scriptsize se monta}};
+  \node[state,fill=robinorange,minimum width=3cm] (loading) at (4.2,0) {Loading};
+  \node[state,fill=mayorgreen,minimum width=3.2cm] (data) at (8.6,1.6) {Datos\\[-2pt]{\scriptsize lista con contenido}};
+  \node[state,fill=lightgreen!60,text=mayordark,minimum width=3.2cm] (empty) at (8.6,0) {EmptyState\\[-2pt]{\scriptsize lista vacía, 200 sin datos}};
+  \node[state,fill=dangerred,minimum width=3.2cm] (error) at (8.6,-1.6) {ErrorMessage\\[-2pt]{\scriptsize con botón "reintentar"}};
+  \draw[arr] (mount) -- (loading);
+  \draw[arr] (loading) -- (data);
+  \draw[arr] (loading) -- (empty);
+  \draw[arr] (loading) -- (error);
+  \draw[arr,color=dangerred] (error.east) to[out=0,in=0,looseness=2.2] node[right,font=\sffamily\scriptsize,color=dangerred]{reintentar} (loading.east);
+\end{tikzpicture}
+\caption{Los tres estados obligatorios de toda pantalla que carga datos: ninguna puede quedar en blanco.}
+\end{figure}
+
+Implementado con los componentes compartidos \code{Loading}, \code{EmptyState} y \code{ErrorMessage} en las seis pantallas que cargan datos (\code{FeedPage}, \code{PublicationDetailPage}, \code{MyDonationsPage}, \code{AdminReviewPage}, \code{NotificationsPage}, \code{ProfilePage}).
 
 \pendiente{Agregar una captura de cada estado (carga/vacío/error) para al menos una pantalla, probada apagando el backend a propósito.}
 
 % ------------------------------------------------------------------ 6. MANUAL
 \section{Manual de uso e instalación}
 
-Versión resumida; el manual completo está en \ruta{docs/manual.md} (Fase 1: creado junto con este esqueleto). El \code{README.md} de la raíz debe enlazarlo cuando el manual quede cerrado.
+Versión resumida; el manual completo, con el mismo contenido, está en \ruta{docs/manual.md}. Hay dos formas de instalar: con \textbf{Docker} (recomendada, no necesita tener Node ni MongoDB instalados) o \textbf{manual} (instalando Node y MongoDB directamente).
 
 \subsection{Requisitos}
+
+\textbf{Opción A — Docker (recomendada):}
 \begin{itemize}
-\item Node.js (versión usada en desarrollo: \porcompletar{confirmar versión exacta con \texttt{node -v}}).
-\item MongoDB corriendo en \code{localhost:27017} (se levanta a mano; no hay contenedor).
-\item npm.
+\item Docker Desktop (probado con Docker 29.6.2 y Docker Compose v5.3.1).
+\item Nada más: Node, MongoDB y npm quedan dentro de los contenedores.
+\end{itemize}
+
+\textbf{Opción B — Manual (sin Docker):}
+\begin{itemize}
+\item Node.js (probado con v25.8.1).
+\item npm (incluido con Node; probado con v11.11.0).
+\item MongoDB corriendo en \code{localhost:27017}, levantado a mano.
 \end{itemize}
 
 \subsection{Instalación}
+
+\textbf{Opción A — Con Docker:}
+\begin{enumerate}
+\item Clonar el repositorio y copiar \code{.env.example} a \code{.env}.
+\item \code{docker compose up --build -d}.
+\item \code{docker compose run --rm db-init} (crea el admin y los datos de prueba — \textbf{destructivo}, borra la base; solo hace falta correrlo una vez).
+\item Abrir \code{http://localhost:8080}. nginx sirve el frontend y reenvía \code{/api} y \code{/uploads} al backend; no hace falta exponer su puerto aparte.
+\end{enumerate}
+
+\textbf{Opción B — Manual (sin Docker):}
 \begin{enumerate}
 \item Clonar el repositorio.
 \item Backend: \code{npm install}, copiar \code{.env.example} a \code{.env}, \code{npm run db:init} (crea el admin y datos de prueba — \textbf{destructivo}, borra la base), \code{npm run dev}.
@@ -680,32 +726,48 @@ Versión resumida; el manual completo está en \ruta{docs/manual.md} (Fase 1: cr
 \item Abrir \code{http://localhost:5173}.
 \end{enumerate}
 
-\pendiente{Esta instalación no se probó en un equipo limpio (sin Node/Mongo preinstalados ni dependencias ya descargadas). Antes de entregar, probarla de verdad en una máquina aparte o declarar explícitamente que no se probó.}
+\pendiente{Ninguna de las dos instalaciones se probó todavía en un equipo limpio de verdad —sin Docker Desktop, Node ni MongoDB preinstalados, en otra máquina física—. Lo que sí se probó en profundidad, en la máquina de desarrollo, es la secuencia completa de la Opción A contra una base de datos vacía, incluido un reinicio de los contenedores sin perder datos (sección~\ref{sec:despliegue}).}
 
 \subsection{Usuarios y datos de prueba}
 
-{\tablestyle
+{\tablestyleorange
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{4.3cm}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{2.0cm}>{\raggedright\arraybackslash}p{3.6cm}@{}}
-\caption{Cuentas de prueba creadas por \code{npm run db:init}}\\
-\rowcolor{mayorgreen}\hc{Correo} & \hc{Contraseña} & \hc{Rol} & \hc{Para probar}\\
+\caption{Cuentas de prueba creadas por \code{npm run db:init} (o \code{docker compose run --rm db-init})}\\
+\rowcolor{robinorange}\hc{Correo} & \hc{Contraseña} & \hc{Rol} & \hc{Para probar}\\
 \endfirsthead
-\rowcolor{mayorgreen}\hc{Correo} & \hc{Contraseña} & \hc{Rol} & \hc{Para probar}\\
+\rowcolor{robinorange}\hc{Correo} & \hc{Contraseña} & \hc{Rol} & \hc{Para probar}\\
 \endhead
-\code{admin@robin.com} & \code{admin123} & admin & Moderación de publicaciones\\
-\code{beneficiario@robin.com} & \code{beneficiario123} & beneficiario & Crear/editar publicaciones; ya tiene una aprobada\\
-\code{donante@robin.com} & \code{donante123} & donante & Reservar, cancelar, confirmar entrega\\
+\code{admin@robin.com} & \code{admin123} & admin & Moderar publicaciones pendientes; ver notificaciones de moderación\\
+\code{beneficiario@robin.com} & \code{beneficiario123} & beneficiario & Dueño de todas las publicaciones de prueba (aprobadas y pendientes); ver reservas y notificaciones sobre sus necesidades\\
+\code{donante@robin.com} & \code{donante123} & donante & Ver reservas ya hechas en "Mis donaciones"; reservar una necesidad disponible nueva; cancelar o confirmar entrega\\
 \end{longtable}}
 
-Todas son cuentas ficticias, creadas solo para pruebas (consistente con la regla de no usar datos personales reales).
+Todas son cuentas ficticias, creadas solo para pruebas (consistente con la regla de no usar datos personales reales). El seed deja la plataforma poblada desde el primer arranque: publicaciones aprobadas con fotos y necesidades en distintos estados, publicaciones pendientes de moderar, y reservas y notificaciones ya generadas para los tres roles.
 
 \subsection{Fallas frecuentes}
 
-{\tablestyle
+\textbf{Con Docker:}
+
+{\tablestylered
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedright\arraybackslash}p{8.4cm}@{}}
+\caption{Fallas encontradas con el despliegue en Docker y su solución}\\
+\rowcolor{dangerred}\hc{Falla} & \hc{Solución}\\
+\endfirsthead
+\rowcolor{dangerred}\hc{Falla} & \hc{Solución}\\
+\endhead
+Error de conexión a la API de Docker al correr \code{docker build}/\code{docker compose up} & Docker Desktop no está corriendo. Abrirlo y esperar a que termine de iniciar antes de reintentar.\\
+El backend no logra conectarse a Mongo justo al arrancar el stack & El contenedor de Mongo todavía no terminó de inicializar. No debería pasar: \code{backend} ya espera a que \code{mongo} esté \code{healthy}; si igual ocurre, revisar \code{docker compose logs mongo}.\\
+Las imágenes de las publicaciones dan \code{404} a través del proxy & La carpeta \code{uploads/publications/} del host no existe o está vacía (se monta directo, no se copia nada dentro de la imagen). Confirmar que las imágenes de prueba estén ahí antes de levantar los contenedores.\\
+\end{longtable}}
+
+\textbf{Instalación manual (sin Docker):}
+
+{\tablestylered
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedright\arraybackslash}p{8.4cm}@{}}
 \caption{Fallas encontradas durante el desarrollo y su solución}\\
-\rowcolor{mayorgreen}\hc{Falla} & \hc{Solución}\\
+\rowcolor{dangerred}\hc{Falla} & \hc{Solución}\\
 \endfirsthead
-\rowcolor{mayorgreen}\hc{Falla} & \hc{Solución}\\
+\rowcolor{dangerred}\hc{Falla} & \hc{Solución}\\
 \endhead
 \code{ECONNREFUSED} al conectar a Mongo & MongoDB no está corriendo. Levantarlo antes de \code{npm run dev} (no se gestiona con un contenedor).\\
 Puerto \code{3900} o \code{5173} ocupado & Otro proceso (otra instancia de \code{npm run dev}) ya lo está usando; identificarlo y detenerlo antes de levantar uno nuevo.\\
@@ -714,16 +776,15 @@ El frontend no ve al backend & El proxy de Vite apunta a \code{http://localhost:
 
 \subsection{Guía de uso por rol}
 
-Ver la tabla de roles de la sección~2.3. El flujo paso a paso (sección~2.2) aplica directamente usando las cuentas de prueba de esta sección.
+Ver la tabla de roles de la sección~2.3. El flujo paso a paso (sección~2.2) aplica directamente usando las cuentas de prueba de esta sección, en \code{http://localhost:8080} (Docker) o \code{http://localhost:5173} (manual).
 
 % ------------------------------------------------------------------ 7. LIMITACIONES DECLARADAS
 \section{Limitaciones declaradas}
 \label{sec:limitaciones}
 
 \begin{itemize}
-\item \textbf{Sin pruebas automatizadas:} ni backend ni frontend tienen un framework de testing configurado; toda la verificación fue manual.
 \item \textbf{Token en \code{localStorage}:} vulnerable a XSS (declarado explícitamente, ver Anexo B). No hay refresco de token ni revocación del lado del servidor.
-\item \textbf{Sin despliegue en contenedores:} no hay \code{Dockerfile} ni \code{docker-compose.yml}; la decisión de despliegue queda \porcompletar{pendiente (sección~\ref{sec:despliegue})}.
+\item \textbf{Despliegue containerizado, sin probar en una máquina distinta:} los 3 servicios (\code{mongo}, \code{backend}, \code{frontend} con nginx) funcionan completos y con persistencia de datos verificada en la máquina de desarrollo (sección~\ref{sec:despliegue}); no se probó todavía en un equipo físicamente distinto y limpio, sin Docker Desktop, Node ni MongoDB preinstalados.
 \item \textbf{Sin índices compuestos:} las colecciones \code{publications}, \code{reservations} y \code{notifications} solo tienen el índice \code{\_id} por defecto; las consultas por \code{status}, \code{donor\_id} o \code{user\_id} no tienen índice de soporte (sin impacto observable con el volumen actual de datos).
 \item \textbf{\code{CORS\_ORIGIN} sin verificar en producción:} el código ya lee la variable, pero no se confirmó que el \code{.env} real tenga un valor restrictivo (una prueba con un origen arbitrario devolvió \code{Access-Control-Allow-Origin: *}).
 \item \textbf{Plan de empresa / comisión de afiliado:} fuera de alcance técnico desde el Hito 2 (depende de una entidad donataria registrada bajo la Ley 21.440); no implementado.
@@ -739,7 +800,7 @@ Este hito cerró la promesa planteada desde el Hito 1: una wishlist de bienes do
 
 El resultado alcanzado coincidió con lo comprometido en el Hito 2 en lo esencial —arquitectura en capas, reserva atómica de necesidades, confirmación manual de entrega— y lo superó en algunos puntos que no estaban previstos: notificaciones consultables, publicaciones guardadas y búsqueda en el feed, surgidos de necesidades reales al construir la interfaz y no de un plan original. También se encontraron y corrigieron, durante la redacción de este mismo informe, tres errores de comportamiento del backend que habían pasado inadvertidos hasta entonces (sección~\ref{sec:evolucion}), lo que confirmó el valor de contrastar la documentación contra el código real antes de darla por cerrada, en vez de asumir que el código hacía lo que el documento decía.
 
-Quedó fuera lo declarado en la sección~\ref{sec:limitaciones}: pruebas automatizadas, despliegue en contenedores, y lo que ya estaba fuera de alcance desde el Hito 2 por razones legales o de tiempo (comisión de afiliado, certificado de donación, plan de empresa). Si el proyecto continuara, el trabajo pendiente más concreto sería decidir e implementar una estrategia de despliegue, agregar al menos pruebas automatizadas para la reserva atómica —la regla de negocio más crítica del sistema— y cerrar las brechas de privacidad declaradas en el Anexo B.
+Quedó fuera lo declarado en la sección~\ref{sec:limitaciones}: probar el despliegue containerizado en una máquina distinta de la de desarrollo, y lo que ya estaba fuera de alcance desde el Hito 2 por razones legales o de tiempo (comisión de afiliado, certificado de donación, plan de empresa). Si el proyecto continuara, el trabajo pendiente más concreto sería esa prueba en una máquina limpia y cerrar las brechas de privacidad declaradas en el Anexo B.
 
 % ------------------------------------------------------------------ 9. REFERENCIAS
 \section{Referencias}
@@ -766,12 +827,12 @@ Declaración basada en lo efectivamente ocurrido en las sesiones de trabajo con 
 
 \subsection{Herramientas y alcance}
 
-{\tablestyle
+{\tablestyleteal
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{6.7cm}@{}}
 \caption{Herramientas de IA usadas y alcance}\\
-\rowcolor{mayorgreen}\hc{Herramienta} & \hc{Alcance} & \hc{Verificación}\\
+\rowcolor{lyrepo}\hc{Herramienta} & \hc{Alcance} & \hc{Verificación}\\
 \endfirsthead
-\rowcolor{mayorgreen}\hc{Herramienta} & \hc{Alcance} & \hc{Verificación}\\
+\rowcolor{lyrepo}\hc{Herramienta} & \hc{Alcance} & \hc{Verificación}\\
 \endhead
 Claude Code & Construcción del frontend completo; correcciones de backend; documentación (este informe, \ruta{docs/informe-Hito2.md} y los documentos previos) & Pruebas manuales con \code{curl} contra el backend real para cada endpoint tocado; uso real en navegador para cada pantalla; \code{grep} de separación de capas; recompilación del PDF para verificar que el LaTeX generado compila sin errores.\\
 \end{longtable}}
@@ -803,12 +864,12 @@ Cada vez que la IA encontró una diferencia entre lo documentado y el código, o
 
 \subsection{Inventario de datos que trata Robin}
 
-{\tablestyle
+{\tablestyleorange
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{4.5cm}>{\raggedright\arraybackslash}p{5.5cm}@{}}
 \caption{Datos personales tratados por el sistema}\\
-\rowcolor{mayorgreen}\hc{Dato} & \hc{Dónde vive} & \hc{Clasificación}\\
+\rowcolor{robinorange}\hc{Dato} & \hc{Dónde vive} & \hc{Clasificación}\\
 \endfirsthead
-\rowcolor{mayorgreen}\hc{Dato} & \hc{Dónde vive} & \hc{Clasificación}\\
+\rowcolor{robinorange}\hc{Dato} & \hc{Dónde vive} & \hc{Clasificación}\\
 \endhead
 Nombre, apellido, apodo & \code{users.name}, \code{surname}, \code{nick} & Identificación básica\\
 Correo & \code{users.email} & Identificación, usado como credencial de inicio de sesión\\

@@ -29,7 +29,7 @@ src/
 1. Clona el repositorio:
 ```bash
 git clone <url-del-repositorio>
-cd ApiRest_Node
+cd <carpeta-del-proyecto>
 ```
 
 2. Instala las dependencias:

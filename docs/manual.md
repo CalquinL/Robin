@@ -2,37 +2,56 @@
 
 Versión independiente del capítulo 6 del informe final (`docs/informe/informe-final-robin.tex`), para que cualquiera pueda instalar y usar el producto sin abrir el PDF completo.
 
+Hay dos formas de instalar: con **Docker** (recomendada, no necesita tener Node ni MongoDB instalados) o **manual** (instalando Node y MongoDB directamente). Elige una.
+
 ## Requisitos
 
-- Node.js ([POR COMPLETAR: confirmar versión exacta usada en desarrollo, `node -v`]).
-- MongoDB corriendo en `localhost:27017`. Se levanta a mano (no hay contenedor todavía).
-- npm.
+**Opción A — Docker (recomendada):**
+- Docker Desktop (probado con Docker 29.6.2 y Docker Compose v5.3.1; cualquier versión reciente de Compose v2 debería servir).
+- Nada más: Node, MongoDB y npm quedan dentro de los contenedores.
+
+**Opción B — Manual (sin Docker):**
+- Node.js (probado con v25.8.1).
+- npm (incluido con Node; probado con v11.11.0).
+- MongoDB corriendo en `localhost:27017`, levantado a mano.
 
 ## Instalación
 
-### Backend
+### Opción A — Con Docker
 
+```bash
+git clone <url-del-repositorio>
+cd <carpeta-del-proyecto>
+cp .env.example .env
+docker compose up --build -d
+docker compose run --rm db-init    # ADVERTENCIA: borra la base y la recrea desde cero
+```
+
+La app queda en `http://localhost:8080` (nginx sirve el frontend y reenvía `/api` y `/uploads` al backend; no hace falta exponer el puerto del backend aparte). `docker compose run --rm db-init` solo hace falta correrlo una vez (o cuando se quiera resetear la base a los datos de prueba); no se levanta solo con `docker compose up`.
+
+Para bajar los contenedores sin perder los datos: `docker compose down` (sin `-v`; con `-v` sí se borra todo, incluida la base).
+
+### Opción B — Manual (sin Docker)
+
+**Backend:**
 ```bash
 npm install
 cp .env.example .env
 npm run db:init    # ADVERTENCIA: borra la base y la recrea desde cero
 npm run dev
 ```
-
 El servidor queda en `http://localhost:3900`.
 
-### Frontend
-
+**Frontend:**
 ```bash
 cd frontend
 npm install
 cp .env.example .env
 npm run dev
 ```
-
 El frontend queda en `http://localhost:5173` (con proxy automático de `/api` y `/uploads` hacia el backend).
 
-**[POR COMPLETAR: esta instalación no se probó en un equipo limpio — sin Node ni MongoDB preinstalados. Antes de entregar, probarla en una máquina aparte o declarar explícitamente que no se probó, como exige la sección 6 del `CLAUDE.md`.]**
+**[POR COMPLETAR: ninguna de las dos instalaciones se probó todavía en un equipo limpio de verdad — sin Docker Desktop, Node ni MongoDB preinstalados, en otra máquina física. Lo que sí se probó en profundidad, en la máquina de desarrollo, es la secuencia completa de comandos de la Opción A contra una base de datos vacía, incluyendo reinicio de los contenedores sin perder datos.]**
 
 ## Variables de entorno
 
@@ -45,34 +64,46 @@ JWT_EXPIRES_IN=24h
 CORS_ORIGIN=http://localhost:5173
 UPLOAD_DIR=uploads/publications
 ```
+Con Docker, `docker-compose.yml` sobrescribe `MONGODB_URI` automáticamente a `mongodb://mongo:27017/robin_db` (el nombre del servicio de Mongo en la red interna) — no hace falta tocar el `.env` para eso. El resto de las variables sí se toman del `.env` tal cual.
 
 **Frontend (`frontend/.env.example`):**
 ```
 VITE_API_URL=/api/v1
 ```
+Con Docker este archivo no se usa: nginx (`frontend/nginx.conf`) reenvía `/api` y `/uploads` al backend dentro de la misma red, así que el valor por defecto (`/api/v1`, ruta relativa) ya funciona sin configurar nada.
 
 ## Usuarios y datos de prueba
 
-`npm run db:init` crea tres cuentas ficticias:
+`npm run db:init` (o `docker compose run --rm db-init`) crea tres cuentas ficticias y deja la plataforma poblada desde el primer arranque: publicaciones aprobadas con fotos y necesidades en distintos estados (disponible, reservada, entregada), publicaciones pendientes de moderar, reservas y notificaciones ya generadas para los tres roles.
 
 | Correo | Contraseña | Rol | Para probar |
 |---|---|---|---|
-| `admin@robin.com` | `admin123` | admin | Moderar publicaciones pendientes |
-| `beneficiario@robin.com` | `beneficiario123` | beneficiario | Crear/editar publicaciones; ya tiene una aprobada con dos necesidades disponibles |
-| `donante@robin.com` | `donante123` | donante | Reservar, cancelar, confirmar entrega |
+| `admin@robin.com` | `admin123` | admin | Moderar publicaciones pendientes; ver notificaciones de moderación |
+| `beneficiario@robin.com` | `beneficiario123` | beneficiario | Dueño de todas las publicaciones de prueba (aprobadas y pendientes); ver reservas y notificaciones sobre sus necesidades |
+| `donante@robin.com` | `donante123` | donante | Ver reservas ya hechas en "Mis donaciones"; reservar una necesidad disponible nueva; cancelar o confirmar entrega |
 
 ## Guía de uso del flujo principal
 
-1. Entrar a `http://localhost:5173` e iniciar sesión como `donante@robin.com`.
-2. Ver el feed (incluye la publicación de prueba del beneficiario).
-3. Abrir el detalle de la publicación.
-4. Reservar una de las dos necesidades disponibles.
-5. Ir a "Mis donaciones" y verla ahí.
+1. Entrar a `http://localhost:8080` (Docker) o `http://localhost:5173` (manual) e iniciar sesión como `donante@robin.com`.
+2. Ver el feed (incluye varias publicaciones aprobadas del beneficiario de prueba, con foto).
+3. Abrir el detalle de una publicación con una necesidad `disponible`.
+4. Reservarla.
+5. Ir a "Mis donaciones" y verla ahí junto con las reservas que ya trae el seed.
 6. Recargar la página: la reserva sigue apareciendo (el token persiste en `localStorage`).
 
-Para probar moderación: iniciar sesión como `admin@robin.com`, crear una publicación nueva con `beneficiario@robin.com` (nace `pendiente`) y aprobarla o rechazarla desde "Moderar".
+Para probar moderación: iniciar sesión como `admin@robin.com` y entrar a "Moderar" — ya hay publicaciones pendientes del seed para aprobar o rechazar.
 
 ## Fallas frecuentes
+
+**Con Docker:**
+
+| Falla | Causa | Solución |
+|---|---|---|
+| `error during connect... docker API at npipe://./pipe/docker_engine` al correr `docker build`/`docker compose up` | Docker Desktop no está corriendo | Abrir Docker Desktop y esperar a que termine de iniciar antes de reintentar |
+| El backend no logra conectarse a Mongo justo al arrancar el stack | El contenedor de Mongo todavía no terminó de inicializar | No debería pasar: `docker-compose.yml` ya hace que `backend` espere a que `mongo` esté `healthy` antes de arrancar. Si igual ocurre, revisar `docker compose logs mongo` |
+| Las imágenes de las publicaciones dan `404` a través de `http://localhost:8080/uploads/...` | La carpeta `uploads/publications/` del host no existe o está vacía (el `docker-compose.yml` la monta directo, no copia nada dentro de la imagen) | Confirmar que las imágenes de prueba estén en `uploads/publications/` en el host antes de levantar los contenedores |
+
+**Instalación manual (sin Docker):**
 
 | Falla | Causa | Solución |
 |---|---|---|

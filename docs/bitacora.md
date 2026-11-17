@@ -421,3 +421,182 @@ Sigue siendo el mismo script destructivo de siempre (borra las 4 colecciones ant
 **Validado:** el documento compila limpio con dos pasadas de `pdflatex` (30 páginas, sin errores, sin referencias indefinidas, mismos ~17 overfull boxes menores de antes, ninguno nuevo).
 
 **Pendiente:** revisión del usuario sobre lo redactado, y decidir qué hacer con los puntos genuinamente faltantes antes de considerar el informe cerrado.
+
+## 2026-11-13 — Revisión visual del informe final: menos redundancia, más variedad de color y diagramas
+
+**Motivo:** el usuario pidió resumir el contenido, variar los colores (todas las tablas usaban el mismo verde) y usar diagramas explicativos donde ayudaran más que una tabla.
+
+**Redundancia eliminada:**
+- Las tablas "Cambios al contrato de la API desde el Hito 2" (sección 3.4) y "Cambios entre el Hito 2 y este informe" (sección 4.1) decían en parte lo mismo (Guardados/Notificaciones, los 3 bugs corregidos). Se fusionaron en una sola tabla en la sección 4.1; la sección 3.4 ahora solo la referencia.
+- La tabla "Detalle del recorrido de punta a punta" repetía en prosa los mismos 10 pasos que ya muestra el diagrama de la figura anterior. Se reemplazó por 3 viñetas con lo que el diagrama *no* muestra (la condición exacta del middleware de rol, del `findOneAndUpdate` atómico, y el efecto colateral de la notificación).
+- La tabla de trazabilidad Hito 1 → Hito 2 → Hito 3 (11 filas, 4 columnas) se redujo a 7 filas y 2 columnas de contenido (fusionando filas casi idénticas como "Certificado de donación" y "Plan de empresa", y "Docker" con "Pruebas automatizadas").
+
+**Variedad de color agregada** (antes todas las tablas usaban `\rowcolor{mayorgreen}`): se definieron tres variantes de estilo de tabla nuevas (`\tablestyleorange`, `\tablestyleteal`, `\tablestylered`) reutilizando colores que ya existían en la paleta del documento (no se inventó ningún color nuevo), aplicadas según el tipo de contenido: naranjo para cambios/decisiones/datos de prueba, teal para arquitectura/flujo/herramientas, rojo para errores/fallas, verde reservado para estado/avance/glosario.
+
+**Diagramas nuevos agregados** (antes solo había 3: general, capas, recorrido de reserva):
+- Línea de tiempo Hito 1 → Hito 2 → Hito 3 (sección 2.1).
+- Diagrama de flujo de validación cliente-servidor, reemplazando la tabla "Qué se valida y dónde" (sección 5.1).
+- Diagrama de los tres estados de pantalla (carga/vacío/error) como máquina de estados simple (sección 5.3).
+
+**Error de LaTeX encontrado al compilar:** un `\\` (salto de línea) anidado dentro de un sub-grupo `{\scriptsize ...}` dentro del texto de un nodo TikZ rompe la compilación ("Undefined control sequence" al cerrar el `tikzpicture") — no ocurre con un solo nivel de `\\`. Se corrigió aplicando `\scriptsize` como declaración simple (sin su propio sub-grupo), con ambos saltos de línea al mismo nivel. Queda anotado como algo a evitar en futuros diagramas de este documento.
+
+**Validado:** el documento compila limpio con dos pasadas de `pdflatex`, bajó de 30 a 28 páginas, sin errores ni referencias indefinidas, overfull boxes en el mismo nivel menor de siempre (ninguno nuevo).
+
+## 2026-11-13 — `db/init.ts` ahora siembra 3 publicaciones temáticas con fotos, reservas y notificaciones
+
+**Motivo:** el único seed anterior (1 publicación, sin foto, sin reservas, sin notificaciones) no bastaba para que "Mis donaciones", "Novedades" y las imágenes se vieran pobladas desde el primer arranque. El usuario agregó 3 fotos reales a `uploads/publications/` (un incendio, una persona enferma, un perro callejero) y pidió publicaciones con necesidades en contexto, reservas sobre las 3 (todas del mismo beneficiario), y notificaciones para los 3 roles.
+
+**Cambio aplicado en `db/init.ts`:** ahora crea 3 publicaciones del mismo `beneficiario@robin.com`, cada una con su `file` (`images.jpg`, `paciente-1.jpg`, `perro.jpg`) y 3 necesidades contextuales, una en cada estado posible (`disponible`, `reservado`, `entregado`). Por cada necesidad no disponible se crea la `Reservation` correspondiente (siempre con `donante@robin.com` como donante) y las notificaciones asociadas.
+
+**Importante, declarado sin maquillar:** las notificaciones de `admin` y `donante` son solo para poblar la demo — en la app real, ningún `service` les envía notificaciones a esos dos roles (`notification.service.ts` solo se llama con el `user_id` del beneficiario, en los 4 puntos donde se crean: publicación aprobada/rechazada, reserva creada/cancelada, entrega confirmada). Esto es una limitación real del sistema (ver sección "Limitaciones declaradas" del informe), no un bug del seed: si se reseteara la base vía la app en vez de este script, `admin` y `donante` seguirían sin recibir notificaciones jamás.
+
+**Validado en caliente** con los tres logins reales: `beneficiario@robin.com` ve 6 reservas en "Mis donaciones" y 9 notificaciones; `donante@robin.com` ve las mismas 6 reservas (como donante) y 6 notificaciones; `admin@robin.com` ve 3 notificaciones; las 3 imágenes se sirven correctamente desde `/uploads/publications/` (200, `image/jpeg`). Los conteos en Mongo (consultados directo) coinciden exactamente con lo que devuelve la API.
+
+**Ampliación (mismo día):** el usuario notó que no había ninguna publicación `pendiente`, así que la pantalla "Moderar" del admin quedaba vacía. Se agregaron 4 publicaciones más del mismo `beneficiario@robin.com`, sin moderar (nacen `pendiente`, sin foto), cada una con 3 necesidades contextuales en `disponible` (recién nacida sin insumos, desalojo, útiles escolares, adulto mayor con movilidad reducida). No llevan reservas ni notificaciones porque todavía no les pasa nada — igual que en la app real, crear una publicación no notifica a nadie, solo moderarla.
+
+**Validado en caliente:** `GET /publications?status=pendiente` como admin devuelve las 4; `GET /publications` (feed, solo aprobadas) se mantiene en 3, sin que las pendientes se filtren por error hacia el feed público.
+
+## 2026-11-13 — Subida de imagen en "Crear publicación" (solo frontend)
+
+**Motivo:** el usuario notó que la pantalla de crear publicación no permitía subir una foto, aunque el backend ya tenía el endpoint completo (`PUT /publications/{id}/image`, con multer validando tipo y tamaño) desde hacía tiempo — nunca se había construido la pantalla. Se confirmó releyendo `src/routes/publication.ts` y `src/services/publication.service.ts` que no hacía falta tocar nada del backend.
+
+**Cambio aplicado (100% frontend):**
+- `services/publications.ts`: nuevo método `uploadImage(id, file)`, arma un `FormData` y llama `apiClient.put(..., true)` (el `apiClient` ya soportaba `multipart/form-data`, pero nada lo usaba todavía).
+- `CreatePublicationPage.tsx`: input de archivo opcional, con validación en cliente de tipo (jpeg/png/gif) y tamaño (≤5MB, igual que el límite real del backend) antes de intentar subir, y vista previa de la imagen elegida.
+- Flujo al publicar: primero `POST /publications` (como antes); si se eligió una imagen, inmediatamente después `PUT /publications/{id}/image` con el id recién creado (son dos llamadas porque crear es JSON y subir imagen es multipart). Si la imagen falla, la publicación igual queda creada y se avisa con un banner aparte en el feed (`imageFailed`), sin bloquear el flujo principal.
+
+**Validado en caliente:** se simuló la misma secuencia de dos llamadas que hace ahora el frontend, directo contra el backend real (crear publicación de prueba, subir una de las fotos ya usadas en el seed) — `201` al crear, `200` al subir con el `file` actualizado en la respuesta, y la imagen servida correctamente en `/uploads/publications/`. Se borró la publicación y el archivo de prueba al terminar. `npm run build`/`lint` del frontend, limpios.
+
+## 2026-11-16 — Primer paso de dockerización: `Dockerfile` del backend
+
+**Motivo:** el usuario empezó a estudiar Docker para poder entregarle el proyecto a su profesor sin que tenga que instalar Node ni MongoDB. Se propuso un plan completo (3 servicios: backend, frontend con nginx como reverse proxy, mongo; red interna; volúmenes para los datos de Mongo y para `uploads/`) y se decidió ir paso a paso, empezando por el `Dockerfile` del backend.
+
+**Decisión de arquitectura (queda para la sección 3.6 del informe del Hito 3):** el frontend usa `VITE_API_URL=/api/v1` (ruta relativa, nunca una URL absoluta, por regla explícita del `CLAUDE.md`). Eso exige que algo en el mismo origen reenvíe `/api` y `/uploads` al backend — hoy lo hace el proxy de Vite en desarrollo. Se eligió reproducir eso con **nginx como reverse proxy** delante del backend, en vez de exponer el backend directo con CORS abierto, para no tener que cambiar código del frontend y para no exponer el backend al host sin necesidad.
+
+**`Dockerfile` creado** (raíz del proyecto, build multi-etapa): etapa 1 instala todas las dependencias y corre `npm run build` (compila TypeScript); etapa 2 solo instala las dependencias de producción (`npm ci --omit=dev`) y copia el `dist/` ya compilado — la imagen final no lleva el compilador de TypeScript. Base `node:25-slim`, la misma versión mayor de Node que corre en la máquina de desarrollo (`node -v` → v25.8.1).
+
+**Riesgo verificado explícitamente:** `bcrypt` compila un binding nativo al instalarse; se confirmó que `npm ci` (ambas etapas) lo instala sin errores sobre `node:25-slim`, sin necesitar herramientas de compilación adicionales en la imagen.
+
+**Validado en caliente, con Docker Desktop real (no solo `docker build`):**
+1. `docker build` de la imagen: sin errores, TypeScript compiló limpio.
+2. Contenedor corrido con variables de entorno por `-e` (ninguna horneada en la imagen) y sin Mongo disponible: arrancó, leyó las variables, se quedó esperando la conexión (comportamiento esperado, no un error).
+3. Con Mongo real corriendo en el host: el contenedor conectó usando `host.docker.internal` (el nombre que usa Docker Desktop para que un contenedor alcance servicios del host) en vez de `localhost`, y `POST /api/v1/users/login` contra el puerto mapeado del contenedor devolvió `200` con el token del admin ya sembrado.
+
+Contenedor e imagen de prueba se eliminaron al terminar (`robin-backend-smoketest`, `robin-backend-test`); el `Dockerfile` queda en el repositorio.
+
+**Pendiente:** cuando se arme `docker-compose.yml`, Mongo pasará a ser su propio contenedor (servicio `mongo`), así que `MONGODB_URI` cambiará de `host.docker.internal` a `mongo` (el nombre del servicio) — este `host.docker.internal` fue solo para probar el `Dockerfile` del backend de forma aislada, antes de armar el resto.
+
+## 2026-11-16 — Optimización del `Dockerfile` del backend (peso y latencia de build)
+
+**Motivo:** el usuario pidió reducir el peso de la imagen y la latencia de build. Primero propuso cambiar a `node:25-alpine`; se descartó ese cambio puntual (riesgo del binding nativo de `bcrypt` sobre `musl` sin probar) y, en su lugar, se aplicaron varias optimizaciones de menor riesgo sobre la misma base `node:25-slim`.
+
+**Cambios aplicados:**
+- **Dependencia `validator` eliminada de `package.json`** (y del `package-lock.json`, regenerado con `npm install --package-lock-only`): se confirmó por `grep` que ya no la importaba ningún archivo de `src/` desde que se borró `src/helpers/validate.ts` (código muerto de una sesión anterior). Son ~1.3MB menos en cada instalación de `node_modules` dentro de la imagen.
+- **`.dockerignore` creado** (no existía): excluye `node_modules`, `dist`, `uploads/`, `.env*`, `.git`, `docs/`, `frontend/`, `db/` y los `.md`. Reduce lo que Docker transfiere como build context en cada build.
+- **`npm cache clean --force` movido a la misma capa `RUN` que `npm ci --omit=dev`** en la etapa runtime (antes no existía esa limpieza). Es la única etapa donde importa: como no copia `node_modules` desde la etapa de build, instala el suyo propio, y el caché de npm que deja ahí sí quedaba dentro de la imagen final si no se limpiaba en la misma capa.
+- **Cache mounts de BuildKit** (`RUN --mount=type=cache,target=/root/.npm,sharing=locked`) en ambas etapas: el store de npm se reutiliza entre builds sucesivos sin terminar dentro de la imagen (vive fuera de las capas), acelerando los rebuilds. `sharing=locked` fue necesario: sin esa opción, al compartir el mismo mount entre las dos etapas que BuildKit corre en paralelo, los `npm ci` simultáneos chocaban escribiendo al mismo caché (`EEXIST`/`ENOENT` en `_cacache`) y el build fallaba.
+- `--no-audit --no-fund` agregado a los `npm ci` (ahorro menor en tiempo de instalación).
+
+**Validado en caliente:** build en frío ≈20s; un segundo build con `--no-cache` (fuerza reinstalar igual, pero mantiene el cache mount) tardó prácticamente lo mismo en los pasos de instalación gracias al cache mount. Imagen final: 361MB. Contenedor probado contra Mongo real del host (`host.docker.internal`): `POST /api/v1/users/login` con el admin sembrado devolvió `200` con token válido, igual que antes de optimizar. Imagen y contenedor de prueba eliminados al terminar.
+
+**Qué no se aplicó:** el cambio a `node:25-alpine` sigue pendiente de evaluar aparte (requeriría verificar si `bcrypt` tiene binding prebuildeado para `musl` en esta versión de Node, o agregar herramientas de compilación temporales en la etapa de build si hay que compilarlo desde el código fuente).
+
+## 2026-11-16 — `frontend/Dockerfile` y `nginx.conf`
+
+**`frontend/Dockerfile`** (build multi-etapa): etapa 1 con `node:25-alpine` instala dependencias y corre `npm run build` (`tsc -b && vite build`); etapa 2 es `nginx:alpine`, copia solo el `dist/` generado y el `nginx.conf`. A diferencia del backend, aquí sí se usó Alpine desde el principio: el frontend no tiene dependencias con binding nativo (no hay `bcrypt`), así que no existe el riesgo glibc/musl que hizo descartar Alpine en el backend. Mismas optimizaciones que el backend: cache mount de BuildKit para `npm ci` y `--no-audit --no-fund`. Imagen final: **94.5MB**.
+
+**`nginx.conf`:** sirve los archivos estáticos del build (`root`, con `try_files ... /index.html` para que las rutas de React Router no den 404 al recargar) y hace de reverse proxy hacia el backend para `/api/` y `/uploads/` — reemplaza al proxy de desarrollo de `vite.config.ts`, necesario porque `VITE_API_URL` es una ruta relativa (`/api/v1`) por regla del proyecto.
+
+**Problema real encontrado y corregido en caliente:** la primera versión usaba `proxy_pass http://backend:3900/...` con el nombre del servicio escrito literal. Al probar el contenedor solo (sin la red de `docker-compose` todavía armada), nginx **no arrancaba**: `host not found in upstream "backend"`. Esto pasa porque nginx resuelve un hostname fijo en `proxy_pass` una sola vez, al iniciar — si en ese momento el contenedor del backend no existe o todavía no se puede resolver, nginx ni siquiera levanta (y aunque resolviera bien al inicio, si el contenedor del backend se recrea con otra IP más adelante, nginx seguiría apuntando a la vieja). Se corrigió usando el DNS interno de Docker explícitamente (`resolver 127.0.0.11 valid=10s`) junto con una variable (`set $backend_upstream http://backend:3900`), que hace que la resolución ocurra en cada petición en vez de una sola vez al arrancar.
+
+Ese cambio introdujo un segundo problema: con `proxy_pass` apuntando a una variable, nginx deja de hacer el reemplazo automático de ruta que sí hace con un destino fijo — la petición llegaba al backend como `/api/` en vez de `/api/v1/users/login` (`Cannot POST /api/`, 404 de Express). Se corrigió usando `proxy_pass $backend_upstream$request_uri;`, que reenvía la ruta completa tal como llegó.
+
+**Validado en caliente**, simulando la red de `docker-compose` a mano (red Docker propia + un contenedor del backend real nombrado literalmente `backend`, igual que será el nombre del servicio): `GET /` → `200` (sirve `index.html`); `GET /publications/123` (ruta que no existe como archivo) → `200` con el fallback a `index.html`, confirmando el ruteo de React Router tras recargar; `POST /api/v1/users/login` a través del proxy → `200` con token real del admin sembrado, igual que pegándole directo al backend. `GET /uploads/publications/images.jpg` devolvió `404`, pero se confirmó que es esperado: ese contenedor de prueba del backend no tenía montado el volumen real de `uploads/` (es efímero), así que el proxy sí reenvió bien la petición y el backend respondió con un 404 limpio de archivo inexistente — no un fallo del proxy. Esa ruta quedará completamente verificada cuando `docker-compose.yml` monte el volumen `uploads_data` compartido entre backend y frontend.
+
+Contenedores, red e imágenes de prueba eliminados al terminar.
+
+## 2026-11-16 — `docker-compose.yml`: los 3 servicios juntos
+
+**Motivo:** cerrar el plan de dockerización con los 3 contenedores (`mongo`, `backend`, `frontend`) orquestados juntos, sin que el profesor tenga que instalar Node ni MongoDB.
+
+**Imagen de Mongo — alternativas evaluadas:** se pidió una imagen de Mongo liviana. Se verificó con un `docker pull` real que `mongo:7` (la oficial) pesa **1.19GB**. No existe una variante Alpine oficial de MongoDB (descontinuada hace años por incompatibilidad glibc/musl, el mismo tipo de riesgo que se evitó con `bcrypt` en el backend, pero mucho más grave tratándose del motor de base de datos completo). Se revisó `bitnami/mongodb` como alternativa más liviana, pero Bitnami dejó de publicar tags de versión fijos en el plan gratuito (solo `:latest`), lo que es inaceptable para un entregable reproducible. **Decisión:** usar `mongo:7` (versión mayor fija, no `latest`) — 1.19GB es el piso real para una imagen de Mongo con soporte oficial, no hay una alternativa más liviana y confiable.
+
+**Problema real encontrado: el script de datos de prueba no podía correr dentro de un contenedor de producción.** `npm run db:init` usa `tsx`, que es una `devDependency` — la imagen final del backend (`npm ci --omit=dev`) no la lleva. Se resolvió agregando un servicio de un solo uso, `db-init`, que construye desde la etapa intermedia `build` del mismo `Dockerfile` (la que sí tiene `tsx` y ahora también copia `db/`, antes excluida del build por el `.dockerignore`). Ese servicio usa `profiles: ["tools"]` para que **no** se levante con `docker compose up` normal; se corre a mano con `docker compose run --rm db-init` cuando se quiere (re)poblar la base.
+
+**Mongo con healthcheck:** se agregó un `healthcheck` real (`mongosh --eval "db.adminCommand('ping')"`, confirmado que `mongosh` existe en la imagen oficial) y `backend`/`db-init` esperan `condition: service_healthy` antes de arrancar — evita que el backend intente conectarse antes de que Mongo esté realmente listo para aceptar conexiones.
+
+**Segundo problema real, encontrado al probar:** las imágenes de las publicaciones (`images.jpg`, `paciente-1.jpg`, `perro.jpg`) daban `404` a través del proxy. La primera versión montaba un volumen con nombre (`uploads_data`) para `uploads/publications` — un volumen con nombre arranca **vacío**, no es la carpeta real del host donde están esas 3 fotos puestas a mano. Se corrigió cambiando a un **bind mount** (`./uploads/publications:/app/uploads/publications`): así el contenedor ve exactamente la misma carpeta real del host, igual que corriendo el backend sin Docker. Nota declarada: `uploads/publications/` está en `.gitignore` a propósito (regla del proyecto), así que esas 3 fotos de demo nunca llegan a un clon limpio del repositorio — es una limitación ya existente, no algo que Docker empeore; en una máquina limpia sin esas fotos, el bind mount simplemente empieza vacío y las imágenes que se suban desde la app sí persisten ahí con normalidad.
+
+**Validado en caliente, stack completo real con `docker compose up --build`:**
+1. Los 3 contenedores levantaron (`mongo` healthy antes de que `backend` arrancara).
+2. `docker compose run --rm db-init` sembró los datos de prueba completos dentro de la red de contenedores (mismo resultado que las pruebas de antes, pero contra el Mongo del contenedor, no el del host).
+3. `POST /api/v1/users/login` contra el puerto publicado del frontend (`8080`) devolvió `200` con token real, pasando por nginx → backend → Mongo, los tres en contenedores distintos.
+4. `GET /api/v1/publications` autenticado devolvió las publicaciones aprobadas reales (incluida la del perro, con su necesidad `reservado`).
+5. La imagen `images.jpg` se sirvió con `200`/`image/jpeg` a través del proxy, tras corregir el bind mount.
+6. **Persistencia confirmada:** se hizo `docker compose restart mongo backend` y el mismo usuario (mismo `_id`) siguió existiendo y pudo loguearse después del reinicio — los datos no se pierden al reiniciar los contenedores, gracias al volumen con nombre `mongo_data`.
+
+Se bajó el stack con `docker compose down` (sin `-v`, así que `mongo_data` y las imágenes construidas se conservan para la próxima vez).
+
+**Pendiente:** actualizar `docs/manual.md` y la sección "Decisión de despliegue" (§3.5-ish) del informe del Hito 3 con los comandos reales (`docker compose up --build -d`, `docker compose run --rm db-init`, URL de acceso `http://localhost:8080`), y agregar `frontend/.env.example`/variables si faltan.
+
+## 2026-11-16 — Riesgo de renombrar la carpeta del proyecto (`ApiRest_Node` → otro nombre)
+
+**Motivo:** el usuario notó que nunca renombró la carpeta local, heredada del proyecto base de la red social (`ApiRest_Node`), y preguntó el riesgo de pasar a algo propio de Robin.
+
+**Hallazgos (verificados, no supuestos):** el remoto de git ya es `github.com/CalquinL/apiRestRedSocial` — el nombre de la carpeta local es puramente cosmético para git, no afecta el repositorio. El único lugar con el string literal `ApiRest_Node` era una línea de `README.md` (`cd ApiRest_Node`), y de hecho esa línea ya estaba mal antes de este cambio: un `git clone` real crea una carpeta `apiRestRedSocial` (el nombre del repo en GitHub), no `ApiRest_Node` — se corrigió a `cd <carpeta-del-proyecto>` para no volver a hardcodear un nombre que se desactualiza.
+
+**Riesgo real identificado:** `docker-compose.yml` no tenía un nombre de proyecto fijo, así que Compose lo derivaba del nombre de la carpeta (`apirest_node-backend`, `apirest_node_mongo_data`, visto en los logs de las pruebas de la sesión). Renombrar la carpeta habría hecho que el próximo `docker compose up` creara un volumen de Mongo **nuevo**, dejando el de los datos ya sembrados huérfano bajo el nombre viejo.
+
+**Corrección aplicada:** se agregó `name: robin-api` al tope de `docker-compose.yml` (nombre de proyecto fijo, en minúsculas como exige Compose, independiente de cómo se llame la carpeta en el disco).
+
+**Validado en caliente:** con el nombre fijado, `docker compose up` creó el volumen como `robin-api_mongo_data` (ya no depende de la carpeta); se corrió `db-init` para sembrar los datos bajo este nombre nuevo y se confirmó login real (`200`). Se eliminaron los dos volúmenes ya huérfanos de las pruebas anteriores (`apirest_node_mongo_data`, `apirest_node_uploads_data`, este último además ya no lo usa ningún servicio desde que se cambió a bind mount para `uploads/`). El usuario queda libre de renombrar la carpeta local sin perder los datos de Docker la próxima vez que use `docker compose up`.
+
+La carpeta se renombró efectivamente a `apiRest_Robin` después de esto; se confirmó con `docker compose config --quiet` desde la ruta nueva que el archivo sigue siendo válido (las rutas del `docker-compose.yml` son relativas, no dependen del nombre de la carpeta).
+
+## 2026-11-17 — `docs/manual.md` actualizado con Docker como ruta recomendada
+
+**Motivo:** cerrar el pendiente del capítulo de manual (sección 6 del `CLAUDE.md` del Hito 3) ahora que el stack de Docker ya está armado y probado.
+
+**Cambios:** el manual pasó de documentar solo la instalación manual (Node + Mongo a mano) a ofrecer dos rutas: Docker (recomendada, con los comandos reales ya probados — `docker compose up --build -d`, `docker compose run --rm db-init`, acceso en `http://localhost:8080`) y la manual como alternativa. Versiones de requisitos puestas a partir de lo realmente instalado en esta máquina (`node -v` → v25.8.1, `docker -v` → 29.6.2, `docker compose version` → v5.3.1), no inventadas. Se aclaró que con Docker no hace falta tocar `MONGODB_URI` ni `VITE_API_URL` a mano (el compose y nginx ya los resuelven).
+
+**Fallas frecuentes:** se agregaron las 3 de Docker que realmente se encontraron esta sesión (Docker Desktop apagado al hacer `docker build`, el riesgo de que `backend` arranque antes que `mongo` esté listo —ya mitigado con el healthcheck, pero documentado por si vuelve a pasar en otra máquina—, y el `404` de imágenes cuando `uploads/publications/` está vacía en el host). Se mantuvieron las 3 de la instalación manual que ya existían, sin tocarlas.
+
+**Honestidad declarada:** se dejó explícito en un `[POR COMPLETAR]` que ninguna de las dos instalaciones se probó todavía en una máquina físicamente distinta y limpia (sin Docker/Node/Mongo preinstalados) — solo se probó a fondo en la máquina de desarrollo, incluyendo reinicios sin pérdida de datos. No se afirmó una prueba en "equipo limpio" que no ocurrió, por regla explícita del `CLAUDE.md` del informe.
+
+## 2026-11-17 — Informe Hito 3: sección "Decisión de despliegue" (§3.5) completada
+
+**Motivo:** cerrar el `\pendiente{}` de la sección 3.5 del informe ahora que el despliegue con Docker ya está implementado y probado.
+
+**Contenido agregado:** diagrama de los 3 contenedores (frontend/nginx, backend, mongo) con su red interna y dónde persiste cada dato (volumen con nombre para Mongo, bind mount para `uploads/`); tabla comparando la alternativa elegida (nginx como reverse proxy) contra exponer el backend directo con CORS abierto, con la desventaja asumida explícita; párrafo sobre las decisiones de imagen base (Mongo oficial sin alternativa liviana confiable, Alpine solo donde no hay riesgo de `bcrypt`) y tamaños reales; y un párrafo de validación en caliente con la brecha pendiente (sin probar en máquina distinta).
+
+**Contradicciones corregidas en el resto del documento:** escribir esta sección dejaba obsoletas cuatro menciones que decían "sin contenedores" o "fuera de alcance" en otras partes del mismo informe (regla del `CLAUDE.md`: las diferencias se corrigen, no se ocultan):
+- Introducción (§1): ya no lista "el despliegue en contenedores" entre lo que quedó fuera.
+- Tabla de trazabilidad (§2.1): la fila "Despliegue en contenedores" pasó de `No implementado` a `Parcial` (implementado y probado en la máquina de desarrollo, falta la prueba en una máquina distinta).
+- Limitaciones declaradas (§7): el ítem pasó de "sin Dockerfile ni docker-compose" a la limitación real que queda — no probado en una máquina físicamente distinta.
+- Conclusión (§8): el trabajo pendiente ya no es "decidir e implementar una estrategia de despliegue" (ya ocurrió) sino probarla en una máquina limpia.
+
+**Validado:** compilado dos veces con `pdflatex` en el directorio de verificación (con `portada.jpg`/`logo_umayor.png` de relleno, nunca copiados al PDF final) — 30 páginas, sin errores de compilación. Los únicos avisos nuevos son cosméticos (un overfull de 8.9pt en una etiqueta del diagrama, del mismo orden que otros ya tolerados en el resto del documento).
+
+**Pendiente, fuera de esta tarea:** el capítulo 6 "Manual de uso e instalación" del informe (líneas ~658-707) todavía describe solo la instalación manual, sin Docker — quedó desincronizado de `docs/manual.md`, que ya se actualizó. Falta decidir si se sincroniza ese capítulo también.
+
+## 2026-11-17 — Capítulo 6 del informe ("Manual de uso e instalación") sincronizado con `docs/manual.md`
+
+**Motivo:** cerrar el pendiente anterior: el capítulo todavía describía solo la instalación manual (sin Docker), desincronizado del `docs/manual.md` ya actualizado.
+
+**Cambio:** se reescribió el capítulo con la misma estructura de dos rutas que tiene `docs/manual.md` (Docker recomendada, manual como alternativa), mismas versiones reales verificadas, mismos comandos, y las dos tablas de fallas frecuentes (Docker + manual) en vez de solo la manual. Se resolvió además el `\porcompletar{confirmar versión exacta con node -v}` que quedaba de la fase de esqueleto, con la versión real ya verificada (v25.8.1). La tabla de cuentas de prueba se actualizó para no decir "ya tiene una aprobada" (desactualizado desde que se ampliaron los datos de prueba) sino la descripción cualitativa real.
+
+**Problema encontrado y corregido al compilar:** una URL larga dentro de \code{} en una celda angosta de la tabla de fallas (\code{http://localhost:8080/uploads/...}) no podía partirse y generaba un overfull de 78.5pt — el más grande de todo el documento. Se acortó la celda, quitando la URL redundante (la solución ya la explica igual sin repetirla).
+
+**Validado:** compilado dos veces en el directorio de verificación — 33 páginas, sin errores. El overfull de 78.5pt desapareció; los overfulls restantes (10 en total, el mayor de 35.5pt) ya existían antes de esta sesión en secciones no tocadas.
+
+## 2026-11-17 — Imágenes de Docker duplicadas (por el renombre de carpeta) y tags semánticos
+
+**Motivo:** el usuario notó que renombrar la carpeta a `apiRest_Robin` (y fijar `name: robin-api` en el compose) había duplicado las imágenes de Docker: las viejas, construidas cuando la carpeta todavía se llamaba `ApiRest_Node`, seguían en disco junto a las nuevas.
+
+**Confirmado con `docker images`:** `apirest_node-backend` (361MB), `apirest_node-frontend` (94.5MB) y `apirest_node-db-init` (427MB) — mismo contenido exacto que `robin-api-backend`, `robin-api-frontend` y `robin-api-db-init`, ~883MB sin usarse. Se eliminaron las tres imágenes viejas con `docker rmi`.
+
+**Tags semánticos agregados:** se agregó la clave `image:` a los tres servicios que construimos nosotros en `docker-compose.yml` (`robin-api-backend:1.0.0`, `robin-api-frontend:1.0.0`, `robin-api-db-init:1.0.0`), usando la misma versión de release que ya declara la sección 4 del `CLAUDE.md` para el contrato de la API (`1.0.0`), en vez de dejar el `:latest` por defecto que pone Compose. La imagen de Mongo no se tocó: `mongo:7` ya es un tag semántico (versión mayor oficial), no es algo que nosotros construyamos.
+
+**Detalle encontrado al reconstruir:** después de agregar los tags y correr `docker compose build`, las imágenes `:1.0.0` quedaron con un ID distinto al `:latest` anterior aunque el contenido (capas) es idéntico — es un efecto de la attestation/provenance que agrega BuildKit en cada build, con timestamp propio, no una reconstrucción real desde cero. Se confirmó con `docker system df -v` que las capas pesadas están compartidas (el backend y el frontend comparten 326.9MB de capas base en común) y no hay duplicación real de espacio en disco. Se eliminaron los tags `:latest` ahora huérfanos.
+
+**Validado:** `docker compose config --quiet` válido; `docker compose build` generó las tres imágenes con sus tags `1.0.0`; `docker compose up -d` + login real (`200`) + `docker compose down` confirmaron que el stack funciona igual que antes del cambio de tags.

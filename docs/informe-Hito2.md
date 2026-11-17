@@ -944,7 +944,7 @@ La arquitectura de persistencia se divide en dos componentes con responsabilidad
         \item Vaciar las cuatro colecciones (\code{users}, \code{publications}, \code{reservations}, \code{notifications}); es un script de base \textit{desde cero}, no una migración incremental, y por lo tanto es destructivo a propósito.
         \item Sincronizar los índices definidos en los esquemas (ej. unicidad de email y nick) con \code{syncIndexes()} (MongoDB, s.f.-e).
         \item Crear el usuario administrador inicial. El rol \code{admin} no puede crearse por registro público (sección 5), así que este script es el único punto donde nace la primera cuenta con ese rol.
-        \item Crear un conjunto mínimo de datos de prueba: un usuario \code{beneficiario}, un usuario \code{donante} y una publicación de ese beneficiario ya en estado \code{aprobada} (con dos necesidades \code{disponible}), para poder probar el flujo de reserva sin tener que registrarse a mano.
+        \item Crear datos de prueba: un usuario \code{beneficiario}, un usuario \code{donante}, publicaciones de ese beneficiario tanto aprobadas como pendientes de moderar, y reservas y notificaciones sobre ellas, para que la plataforma se vea poblada desde el primer arranque sin tener que registrarse ni actuar a mano.
     \end{itemize}
 \end{enumerate}
 

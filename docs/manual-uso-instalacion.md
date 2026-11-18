@@ -74,4 +74,4 @@ Para probar moderación: iniciar sesión como `admin@robin.com` y entrar a "Mode
 ## Referencias
 
 - Tabla completa de endpoints: [interfaz-programacion.md](/docs/interfaz-programacion.md).
-- Modelo de datos: [modelo_de_datos](db/Modelo_de_datos.png).
+- Modelo de datos: [modelo_de_datos](/db/Modelo_de_datos.png).

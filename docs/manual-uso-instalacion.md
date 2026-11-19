@@ -11,7 +11,7 @@
 ```bash
 git clone https://github.com/CalquinL/Robin.git
 cd Robin
-cp .env.example .env (copy en cmd)
+cp .env.example .env # (copy en cmd)
 docker compose up --build -d
 docker compose run --rm db-init    # ADVERTENCIA: borra la base y la recrea desde cero
 ```

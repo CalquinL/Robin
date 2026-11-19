@@ -41,9 +41,8 @@ docs/           # Documentación, manuales e informes
 
 - Interfaz de la API (rutas, parámetros, códigos de estado): [interfaz-programacion.md](/docs/interfaz-programacion.md)
 - Manual de uso e instalación completo: [manual-uso-instalacion.md](/docs/manual-uso-instalacion.md)
-- Informe técnico del Hito 2: [docs/informe-Hito2.pdf](/docs/informe-Hito2.pdf)
-- Informe final del Hito 3: [docs/informe-Hito3.pdf](/docs/informe-Hito3.pdf)
-- Bitácora de decisiones: [docs/bitacora.md](/docs/bitacora.md)
+- Informe técnico del Hito 2: [informe-Hito2.pdf](/docs/informe-Hito2.pdf)
+- Informe final del Hito 3: [informe-Hito3.pdf](/docs/informe-Hito3.pdf)
 
 
 ## 👤 Autor

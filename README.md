@@ -1,87 +1,53 @@
-# Robin · Back end (Hito 2)
+# Robin
 
-API REST desarrollada con Node.js, Express y MongoDB para gestionar una plataforma de wishlist solidaria, permitiendo a beneficiarios publicar necesidades y a donantes reservarlas.
+Plataforma web de wishlist solidaria: personas naturales publican su historia y una lista de necesidades concretas (bienes, no dinero). Un administrador verifica cada publicación antes de que sea visible, y los donantes reservan y entregan directamente uno de esos bienes, con confirmación manual de la entrega.
 
-## 🚀 Tecnologías
+Proyecto del curso INGT1003 Arquitectura de Desarrollo Móvil y Web, Universidad Mayor. Producto completo: backend (API REST), frontend (React) y despliegue con Docker.
 
-- **Node.js** y **Express** — servidor y enrutamiento
-- **MongoDB** con **Mongoose** — base de datos
-- **JWT** — autenticación mediante tokens
-- **TypeScript** — lenguaje de programación (migración gradual)
+## Video promocional
+
+[ESPACIO PARA EL LINK DEL VIDEO PROMOCIONAL]
+
+## 🚀 Cómo levantarlo
+
+Con Docker Desktop instalado:
+
+```bash
+git clone https://github.com/CalquinL/Robin.git
+cd Robin
+cp .env.example .env
+docker compose up --build -d
+docker compose run --rm db-init
+```
+
+Abre `http://localhost:8080`. Guía completa, cuentas de prueba y fallas frecuentes: [`docs/archivo-instrucciones.md`](docs/archivo-instrucciones.md) (resumen) o [`docs/manual-uso-instalacion.md`](docs/manual-uso-instalacion.md) (detalle completo).
+
+## 🛠️ Tecnologías
+
+- **Backend:** Node.js, Express, MongoDB (Mongoose), JWT, TypeScript
+- **Frontend:** React, Vite, TypeScript
+- **Despliegue:** Docker, docker-compose, nginx
 
 ## 📁 Estructura del proyecto
 
 ```
-src/
-├── config/       # Configuración de entorno y base de datos
-├── controllers/  # Manejadores de peticiones HTTP
-├── middlewares/  # Filtros de auth, roles y errores
-├── models/       # Definiciones de esquemas Mongoose
-├── repositories/ # Operaciones atómicas de base de datos
-├── routes/      # Definición de endpoints (/api/v1)
-├── services/     # Reglas de negocio y lógica de dominio
-├── utils/        # Respuestas estandarizadas y AppError
-└── validators/   # Esquemas de validación de datos
+src/            # Backend: routes, controllers, services, repositories, models
+frontend/src/   # Frontend: pages, components, hooks, services
+db/             # Script de inicialización de la base de datos
+docs/           # Documentación, manuales e informes
 ```
 
-## ⚙️ Instalación
+## 📚 Documentación
 
-1. Clona el repositorio:
-```bash
-git clone <url-del-repositorio>
-cd <carpeta-del-proyecto>
-```
-
-2. Instala las dependencias:
-```bash
-npm install
-```
-
-3. Configura las variables de entorno creando un archivo `.env` basado en `.env.example`:
-```env
-PORT=3000
-MONGODB_URI=mongodb://localhost:27017/robin
-JWT_SECRET=tu_clave_secreta
-JWT_EXPIRES_IN=24h
-CORS_ORIGIN=*
-UPLOAD_DIR=uploads/
-```
-
-4. Inicia el servidor:
-```bash
-npm run dev
-```
-
-## 📌 Endpoints principales (v1)
-
-Todas las rutas parten de `/api/v1`.
-
-### Auth (`/auth`)
-- `POST /register`: Registro de usuario.
-- `POST /login`: Inicio de sesión.
-
-### Users (`/users`)
-- `GET /me`: Ver perfil propio.
-- `PATCH /me`: Actualizar perfil propio.
-- `GET /users/{id}`: Ver perfil de otro usuario.
-
-### Publications (`/publications`)
-- `POST /publications`: Crear publicación (beneficiario).
-- `GET /publications`: Listar aprobadas (paginado).
-- `GET /publications/{id}`: Detalle de publicación.
-- `PATCH /publications/{id}`: Editar publicación.
-- `DELETE /publications/{id}`: Eliminar publicación.
-- `PATCH /publications/{id}/status`: Moderar estado (admin).
-- `PUT /publications/{id}/image`: Subir imagen.
-
-### Reservations (`/reservations`)
-- `POST /reservations`: Reservar un ítem (donante).
-- `GET /reservations`: Mis reservaciones (paginado).
-- `GET /reservations/{id}`: Detalle de reservación.
-- `PATCH /reservations/{id}/status`: Cancelar o confirmar entrega.
+- Interfaz de la API (rutas, parámetros, códigos de estado): [`docs/interfaz-programacion.md`](docs/interfaz-programacion.md)
+- Manual de uso e instalación completo: [`docs/manual-uso-instalacion.md`](docs/manual-uso-instalacion.md)
+- Informe técnico del Hito 2: [`docs/informe-Hito2.pdf`](docs/informe-Hito2.pdf)
+- Informe final del Hito 3: [`docs/informe-Hito3.pdf`](docs/informe-Hito3.pdf)
+- Bitácora de decisiones: [`docs/bitacora.md`](docs/bitacora.md)
 
 ## 🔐 Autenticación
-La API utiliza JWT. Debes incluir el token en el header de las peticiones protegidas:
+
+La API utiliza JWT. Incluye el token en el header de las peticiones protegidas:
 `Authorization: Bearer <token>`
 
 ## 👤 Autor

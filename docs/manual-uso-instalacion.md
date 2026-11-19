@@ -1,10 +1,9 @@
 # Manual de uso e instalación — Robin
 
-Versión independiente del capítulo de manual del informe final (`docs/informe/informe-final-robin.tex`), para que cualquiera pueda instalar y usar el producto sin abrir el PDF completo. La única forma de instalación soportada es con **Docker**.
-
 ## Requisitos
 
 - Docker Desktop (probado con Docker 29.6.2 y Docker Compose v5.3.1; cualquier versión reciente de Compose v2 debería servir).
+- Git
 - Nada más: Node, MongoDB y npm quedan dentro de los contenedores.
 
 ## Instalación
@@ -12,7 +11,7 @@ Versión independiente del capítulo de manual del informe final (`docs/informe/
 ```bash
 git clone https://github.com/CalquinL/Robin.git
 cd Robin
-cp .env.example .env
+cp .env.example .env (copy en cmd)
 docker compose up --build -d
 docker compose run --rm db-init    # ADVERTENCIA: borra la base y la recrea desde cero
 ```
@@ -21,7 +20,6 @@ La app queda en `http://localhost:8080` (nginx sirve el frontend y reenvía `/ap
 
 Para bajar los contenedores sin perder los datos: `docker compose down` (sin `-v`; con `-v` sí se borra todo, incluida la base).
 
-**[POR COMPLETAR: esta instalación no se probó todavía en un equipo limpio de verdad — sin Docker Desktop preinstalado, en otra máquina física. Lo que sí se probó en profundidad, en la máquina de desarrollo, es la secuencia completa de comandos contra una base de datos vacía, incluyendo reinicio de los contenedores sin perder datos.]**
 
 ### Variables de entorno
 

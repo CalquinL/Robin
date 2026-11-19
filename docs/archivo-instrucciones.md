@@ -1,6 +1,6 @@
 # Archivo de instrucciones — Robin
 
-Con este archivo se levanta el **producto funcional completo** (frontend + backend + base de datos), usando Docker. Para el detalle completo paso a paso, ver [manual de uso e instalación](docs/manual-uso-instalacion.md).
+Con este archivo se levanta el **producto funcional completo** (frontend + backend + base de datos), usando Docker. Para el detalle completo paso a paso, ver [manual de uso e instalación](/docs/manual-uso-instalacion.md).
 
 ## Video promocional
 

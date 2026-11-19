@@ -36,7 +36,6 @@
 | DELETE | `/publications/{id}` | `id` | — | 204 | 403, 404, 409 |
 | PATCH | `/publications/{id}/status` | `id` | `{status: aprobada\|rechazada}` | 200 | 400, 403, 404, 409 |
 | PUT | `/publications/{id}/image` | `id` | `multipart/form-data` (`file`) | 200 | 400, 403, 404, 415 |
-| GET | `/uploads/publications/{file}` *(fuera de `/api/v1`)* | `file` | — | 200 | 404 |
 
 ## Reservations
 

@@ -18,7 +18,10 @@ export function PublicationCard({ publication }: { publication: Publication }) {
           <div className="avatar-circle">{authorInitial}</div>
           <div className="story-info">
             <h4>
-              {authorName} <span className="badge-verified">✓ Historia verificada</span>
+              {authorName}{' '}
+              {publication.status === 'aprobada' && (
+                <span className="badge-verified">✓ Historia verificada</span>
+              )}
             </h4>
             <span>{formatRelativeTime(publication.created_at)}</span>
           </div>
